@@ -1,12 +1,40 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import { useState } from 'react';
+import LandingPage from '@/components/LandingPage';
+import Questionnaire from '@/components/Questionnaire';
+import FakeDoor from '@/components/FakeDoor';
 
 const Index = () => {
+  const [currentStep, setCurrentStep] = useState('landing');
+  const [userAnswers, setUserAnswers] = useState({});
+
+  const handleStartQuestionnaire = () => {
+    console.log('User started questionnaire');
+    setCurrentStep('questionnaire');
+  };
+
+  const handleQuestionnaireComplete = (answers: any) => {
+    console.log('Questionnaire completed:', answers);
+    setUserAnswers(answers);
+    setCurrentStep('fake-door');
+  };
+
+  const renderCurrentStep = () => {
+    switch (currentStep) {
+      case 'landing':
+        return <LandingPage onStartQuestionnaire={handleStartQuestionnaire} />;
+      case 'questionnaire':
+        return <Questionnaire onComplete={handleQuestionnaireComplete} />;
+      case 'fake-door':
+        return <FakeDoor userAnswers={userAnswers} />;
+      default:
+        return <LandingPage onStartQuestionnaire={handleStartQuestionnaire} />;
+    }
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen">
+      {renderCurrentStep()}
     </div>
   );
 };
