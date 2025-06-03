@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { analytics } from '@/utils/analytics';
 
 const ExtendedQuestionnaire = () => {
   const navigate = useNavigate();
@@ -22,43 +23,48 @@ const ExtendedQuestionnaire = () => {
     telegram: ''
   });
 
+  useState(() => {
+    // Track form start
+    analytics.track('form_start');
+  });
+
   const steps = [
     {
       id: 'grade',
-      title: 'В каком ты классе?',
+      title: '🎓 В каком ты классе?',
       type: 'radio',
       options: ['9', '10', '11']
     },
     {
       id: 'goals',
-      title: 'Какие у тебя цели?',
+      title: '🎯 Какие у тебя цели?',
       type: 'checkbox',
-      options: ['ЕГЭ', 'ОГЭ', 'Олимпиады', 'Проекты']
+      options: ['ЕГЭ 📚', 'ОГЭ 📝', 'Олимпиады 🏆', 'Проекты 💡']
     },
     {
       id: 'subjects',
-      title: 'По каким предметам нужна помощь?',
+      title: '📖 Какие предметы хочешь ботать вместе с напарником?',
       type: 'checkbox',
       options: [
-        'Русский язык',
-        'Математика профильная',
-        'Информатика',
-        'Физика',
-        'Химия',
-        'Биология',
-        'История',
-        'Обществознание',
-        'Другое'
+        'Русский язык 📝',
+        'Математика профильная 🔢',
+        'Информатика 💻',
+        'Физика ⚡',
+        'Химия 🧪',
+        'Биология 🧬',
+        'История 📜',
+        'Обществознание 🏛️',
+        'Другое ❓'
       ]
     },
     {
       id: 'level',
-      title: 'Какой у тебя текущий уровень?',
+      title: '📊 Какой у тебя текущий уровень?',
       type: 'conditional'
     },
     {
       id: 'contacts',
-      title: 'Как с тобой связаться?',
+      title: '📱 Как с тобой связаться?',
       type: 'contacts'
     }
   ];
@@ -98,12 +104,26 @@ const ExtendedQuestionnaire = () => {
   };
 
   const handleNext = () => {
+    // Track step completion
+    analytics.track('form_step_complete', { 
+      step: currentStep + 1,
+      stepId: steps[currentStep].id 
+    });
+
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
-      // Submit form
+      // Submit form with real analytics
       console.log('Form submitted:', answers);
-      // TODO: Save to database
+      
+      // Clean up emoji from answers for storage
+      const cleanAnswers = {
+        ...answers,
+        goals: answers.goals.map(goal => goal.replace(/\s*[📚📝🏆💡]\s*$/, '')),
+        subjects: answers.subjects.map(subject => subject.replace(/\s*[📝🔢💻⚡🧪🧬📜🏛️❓]\s*$/, ''))
+      };
+      
+      analytics.submitApplication(cleanAnswers);
       navigate('/thanks');
     }
   };
@@ -151,10 +171,10 @@ const ExtendedQuestionnaire = () => {
         );
 
       case 'conditional':
-        if (answers.goals.includes('ЕГЭ') || answers.goals.includes('ОГЭ')) {
+        if (answers.goals.some(goal => goal.includes('ЕГЭ') || goal.includes('ОГЭ'))) {
           return (
             <div className="space-y-4">
-              <Label htmlFor="examScore" className="text-lg">Баллы последнего пробника:</Label>
+              <Label htmlFor="examScore" className="text-lg">📊 Баллы последнего пробника:</Label>
               <Input
                 id="examScore"
                 type="number"
@@ -165,14 +185,14 @@ const ExtendedQuestionnaire = () => {
               />
             </div>
           );
-        } else if (answers.goals.includes('Олимпиады')) {
+        } else if (answers.goals.some(goal => goal.includes('Олимпиады'))) {
           return (
             <RadioGroup 
               value={answers.level} 
               onValueChange={(value) => handleAnswerChange('level', value)}
               className="space-y-4"
             >
-              {['Школьный уровень', 'Муниципальный уровень', 'Региональный уровень', 'Заключительный тур', 'Призёр/победитель'].map((level) => (
+              {['🏫 Школьный уровень', '🏘️ Муниципальный уровень', '🏛️ Региональный уровень', '🎯 Заключительный тур', '🏆 Призёр/победитель'].map((level) => (
                 <div key={level} className="flex items-center space-x-3 p-4 rounded-lg hover:bg-gray-50 transition-colors border">
                   <RadioGroupItem value={level} id={level} />
                   <Label htmlFor={level} className="text-lg cursor-pointer flex-1">{level}</Label>
@@ -181,13 +201,13 @@ const ExtendedQuestionnaire = () => {
             </RadioGroup>
           );
         }
-        return <p className="text-lg text-gray-600">Отлично! Мы учтём твою цель при подборе напарника.</p>;
+        return <p className="text-lg text-gray-600">✨ Отлично! Мы учтём твою цель при подборе напарника.</p>;
 
       case 'contacts':
         return (
           <div className="space-y-6">
             <div>
-              <Label htmlFor="email" className="text-lg mb-2 block">Email:</Label>
+              <Label htmlFor="email" className="text-lg mb-2 block">📧 Email:</Label>
               <Input
                 id="email"
                 type="email"
@@ -198,7 +218,7 @@ const ExtendedQuestionnaire = () => {
               />
             </div>
             <div>
-              <Label htmlFor="telegram" className="text-lg mb-2 block">Telegram username:</Label>
+              <Label htmlFor="telegram" className="text-lg mb-2 block">💬 Telegram username:</Label>
               <Input
                 id="telegram"
                 placeholder="@username"
@@ -222,7 +242,7 @@ const ExtendedQuestionnaire = () => {
         <div className="mb-8">
           <div className="flex justify-between text-sm text-gray-500 mb-2">
             <span>Шаг {currentStep + 1} из {steps.length}</span>
-            <span>{Math.round(((currentStep + 1) / steps.length) * 100)}%</span>
+            <span>{Math.round(((currentStep + 1) / steps.length) * 100)}% ✨</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div 
@@ -247,7 +267,7 @@ const ExtendedQuestionnaire = () => {
               className="px-6 py-3 border-2"
             >
               <ChevronLeft className="w-4 h-4 mr-2" />
-              Назад
+              ⬅️ Назад
             </Button>
 
             <Button
@@ -255,7 +275,7 @@ const ExtendedQuestionnaire = () => {
               disabled={!canProceed()}
               className="bg-[#FECD02] hover:bg-[#FECD02]/90 text-black px-6 py-3 font-semibold"
             >
-              {currentStep === steps.length - 1 ? 'Отправить заявку' : 'Далее'}
+              {currentStep === steps.length - 1 ? '🚀 Отправить заявку' : '➡️ Далее'}
               <ChevronRight className="w-4 h-4 ml-2" />
             </Button>
           </div>
