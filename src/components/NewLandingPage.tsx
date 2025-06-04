@@ -60,13 +60,6 @@ const NewLandingPage = () => {
             >
               Подобрать напарника 🤝
             </Button>
-            <Button 
-              onClick={handleCTAClick}
-              variant="outline"
-              className="border-2 border-[#FECD02] text-[#FECD02] hover:bg-[#FECD02] hover:text-black px-12 py-4 text-xl font-semibold rounded-lg transition-all duration-300"
-            >
-              Начать бесплатно 🎯
-            </Button>
           </div>
         </div>
 
@@ -92,7 +85,7 @@ const NewLandingPage = () => {
                 <Target className="w-6 h-6 text-[#FECD02] mr-3" />
                 <h3 className="text-lg font-semibold text-gray-900">Постановка целей</h3>
               </div>
-              <p className="text-gray-700">Помогаем определить реальные цели и план их достижения</p>
+              <p className="text-gray-700">Помогаем определить достижимые цели и план их реализации</p>
             </Card>
 
             <Card className="p-6 bg-white/80 backdrop-blur-sm border-l-4 border-[#FECD02] hover:shadow-lg transition-shadow">
@@ -106,7 +99,7 @@ const NewLandingPage = () => {
 
           {/* Job-specific Goals */}
           <div className="text-center">
-            <h3 className="text-xl font-bold text-gray-900 mb-4">🎯 Реальные результаты наших участников:</h3>
+            <h3 className="text-xl font-bold text-gray-900 mb-4">🎯 Наш сервис поможет тебе достичь:</h3>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="bg-white/60 rounded-lg p-4 text-center">
                 <div className="text-2xl font-bold text-[#FECD02]">ЕГЭ 90+</div>
@@ -213,6 +206,18 @@ const NewLandingPage = () => {
           </Card>
         </div>
 
+        {/* Social Proof */}
+        <div className="mb-16">
+          <h2 className="text-3xl font-bold text-center mb-8 text-gray-900">💬 Что говорят школьники</h2>
+          <div className="grid md:grid-cols-3 gap-6">
+            {testimonials.map((testimonial, index) => (
+              <Card key={index} className="p-6 border-l-4 border-[#FECD02] bg-gray-50/50 hover:shadow-lg transition-shadow">
+                <p className="text-gray-800 italic text-lg">"{testimonial}"</p>
+              </Card>
+            ))}
+          </div>
+        </div>
+
         {/* Scientific Foundation - Simplified and Moved Lower */}
         <div className="mb-16 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6">
           <div className="text-center mb-4">
@@ -238,35 +243,14 @@ const NewLandingPage = () => {
           </Card>
         </div>
 
-        {/* Social Proof */}
-        <div className="mb-16">
-          <h2 className="text-3xl font-bold text-center mb-8 text-gray-900">💬 Что говорят школьники</h2>
-          <div className="grid md:grid-cols-3 gap-6">
-            {testimonials.map((testimonial, index) => (
-              <Card key={index} className="p-6 border-l-4 border-[#FECD02] bg-gray-50/50 hover:shadow-lg transition-shadow">
-                <p className="text-gray-800 italic text-lg">"{testimonial}"</p>
-              </Card>
-            ))}
-          </div>
-        </div>
-
         {/* Final CTA */}
         <div className="text-center mb-16">
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button 
-              onClick={handleCTAClick}
-              className="bg-[#FECD02] hover:bg-[#FECD02]/90 text-black px-12 py-4 text-xl font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-            >
-              🚀 Начать учиться вместе
-            </Button>
-            <Button 
-              onClick={handleCTAClick}
-              variant="outline"
-              className="border-2 border-[#FECD02] text-[#FECD02] hover:bg-[#FECD02] hover:text-black px-12 py-4 text-xl font-semibold rounded-lg transition-all duration-300"
-            >
-              📝 Подать заявку сейчас
-            </Button>
-          </div>
+          <Button 
+            onClick={handleCTAClick}
+            className="bg-[#FECD02] hover:bg-[#FECD02]/90 text-black px-12 py-4 text-xl font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+          >
+            🚀 Начать учиться вместе
+          </Button>
         </div>
       </div>
 
