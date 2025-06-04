@@ -53,27 +53,36 @@ const NewLandingPage = () => {
             Мы подберём тебе напарника, который тянет тебя вверх ⬆️
           </p>
           
-          <Button 
-            onClick={handleCTAClick}
-            className="bg-[#FECD02] hover:bg-[#FECD02]/90 text-black px-12 py-4 text-xl font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-          >
-            Подобрать напарника 🤝
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
+            <Button 
+              onClick={handleCTAClick}
+              className="bg-[#FECD02] hover:bg-[#FECD02]/90 text-black px-12 py-4 text-xl font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+            >
+              Подобрать напарника 🤝
+            </Button>
+            <Button 
+              onClick={handleCTAClick}
+              variant="outline"
+              className="border-2 border-[#FECD02] text-[#FECD02] hover:bg-[#FECD02] hover:text-black px-12 py-4 text-xl font-semibold rounded-lg transition-all duration-300"
+            >
+              Начать бесплатно 🎯
+            </Button>
+          </div>
         </div>
 
-        {/* Enhanced Offer */}
+        {/* Enhanced Offer with Job-specific Goals */}
         <div className="mb-16 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-2xl p-8 border-2 border-[#FECD02]/20">
           <div className="text-center mb-8">
             <Star className="w-12 h-12 mx-auto mb-4 text-[#FECD02]" />
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">🎯 Полный комплекс для успеха</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Полный комплекс для успеха</h2>
             <p className="text-lg text-gray-700">Не просто напарник — целая система достижения целей</p>
           </div>
           
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-3 gap-6 mb-8">
             <Card className="p-6 bg-white/80 backdrop-blur-sm border-l-4 border-[#FECD02] hover:shadow-lg transition-shadow">
               <div className="flex items-center mb-3">
                 <Users className="w-6 h-6 text-[#FECD02] mr-3" />
-                <h3 className="text-lg font-semibold text-gray-900">🤝 Идеальный напарник</h3>
+                <h3 className="text-lg font-semibold text-gray-900">Идеальный напарник</h3>
               </div>
               <p className="text-gray-700">Подбираем по уровню, целям и характеру</p>
             </Card>
@@ -81,7 +90,7 @@ const NewLandingPage = () => {
             <Card className="p-6 bg-white/80 backdrop-blur-sm border-l-4 border-[#FECD02] hover:shadow-lg transition-shadow">
               <div className="flex items-center mb-3">
                 <Target className="w-6 h-6 text-[#FECD02] mr-3" />
-                <h3 className="text-lg font-semibold text-gray-900">🎯 Постановка целей</h3>
+                <h3 className="text-lg font-semibold text-gray-900">Постановка целей</h3>
               </div>
               <p className="text-gray-700">Помогаем определить реальные цели и план их достижения</p>
             </Card>
@@ -89,36 +98,34 @@ const NewLandingPage = () => {
             <Card className="p-6 bg-white/80 backdrop-blur-sm border-l-4 border-[#FECD02] hover:shadow-lg transition-shadow">
               <div className="flex items-center mb-3">
                 <Calendar className="w-6 h-6 text-[#FECD02] mr-3" />
-                <h3 className="text-lg font-semibold text-gray-900">📅 Дисциплина и контроль</h3>
+                <h3 className="text-lg font-semibold text-gray-900">Дисциплина и контроль</h3>
               </div>
               <p className="text-gray-700">Ежедневная отчетность и поддержка через @hub_hub_bot</p>
             </Card>
           </div>
-        </div>
 
-        {/* Scientific Foundation - Simplified */}
-        <div className="mb-16 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-8">
-          <div className="text-center mb-8">
-            <BookOpen className="w-12 h-12 mx-auto mb-4 text-blue-600" />
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">🧠 Почему это работает</h2>
-          </div>
-          <Card className="p-6 bg-white/90 backdrop-blur-sm border-l-4 border-[#FECD02]">
-            <p className="text-gray-800 text-lg leading-relaxed">
-              <strong>Джеймс Клир</strong> в книге <em>«Atomic Habits»</em> доказал: когда ты даёшь обещание другому человеку — 
-              вероятность выполнить задачу <strong>увеличивается в разы</strong>. 📈 
-              Это работает, потому что мы не хотим подводить тех, кто на нас рассчитывает.
-            </p>
-            <div className="mt-4 text-sm">
-              <a 
-                href="https://summit-of-self.com/atomic-habits-17-strengthening-commitments-with-habit-contracts-accountability-partners/" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:underline font-medium"
-              >
-                Подробнее о научных исследованиях →
-              </a>
+          {/* Job-specific Goals */}
+          <div className="text-center">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">🎯 Реальные результаты наших участников:</h3>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="bg-white/60 rounded-lg p-4 text-center">
+                <div className="text-2xl font-bold text-[#FECD02]">ЕГЭ 90+</div>
+                <div className="text-sm text-gray-700">Успешная сдача экзаменов</div>
+              </div>
+              <div className="bg-white/60 rounded-lg p-4 text-center">
+                <div className="text-2xl font-bold text-[#FECD02]">Призер олимпиад</div>
+                <div className="text-sm text-gray-700">Региональный и всероссийский уровень</div>
+              </div>
+              <div className="bg-white/60 rounded-lg p-4 text-center">
+                <div className="text-2xl font-bold text-[#FECD02]">Гранты</div>
+                <div className="text-sm text-gray-700">Выигрыш проектных конкурсов</div>
+              </div>
+              <div className="bg-white/60 rounded-lg p-4 text-center">
+                <div className="text-2xl font-bold text-[#FECD02]">Топ-ВУЗы</div>
+                <div className="text-sm text-gray-700">Поступление на бюджет</div>
+              </div>
             </div>
-          </Card>
+          </div>
         </div>
 
         {/* Pain + Gain */}
@@ -127,7 +134,7 @@ const NewLandingPage = () => {
             <div className="bg-[#FECD02] w-16 h-16 rounded-lg flex items-center justify-center mx-auto mb-4">
               <Timer className="w-8 h-8 text-black" />
             </div>
-            <h3 className="text-xl font-semibold mb-3 text-gray-900">⏰ Меньше прокрастинации</h3>
+            <h3 className="text-xl font-semibold mb-3 text-gray-900">Меньше прокрастинации</h3>
             <p className="text-gray-700">Внешний контроль и ответственность перед напарником</p>
           </Card>
 
@@ -135,7 +142,7 @@ const NewLandingPage = () => {
             <div className="bg-[#FECD02] w-16 h-16 rounded-lg flex items-center justify-center mx-auto mb-4">
               <HandHeart className="w-8 h-8 text-black" />
             </div>
-            <h3 className="text-xl font-semibold mb-3 text-gray-900">🤝 Поддержка</h3>
+            <h3 className="text-xl font-semibold mb-3 text-gray-900">Поддержка</h3>
             <p className="text-gray-700">Взаимная мотивация в трудные моменты подготовки</p>
           </Card>
 
@@ -143,7 +150,7 @@ const NewLandingPage = () => {
             <div className="bg-[#FECD02] w-16 h-16 rounded-lg flex items-center justify-center mx-auto mb-4">
               <BarChart3 className="w-8 h-8 text-black" />
             </div>
-            <h3 className="text-xl font-semibold mb-3 text-gray-900">📈 Стабильный прогресс</h3>
+            <h3 className="text-xl font-semibold mb-3 text-gray-900">Стабильный прогресс</h3>
             <p className="text-gray-700">Регулярные занятия и достижение поставленных целей</p>
           </Card>
         </div>
@@ -206,6 +213,31 @@ const NewLandingPage = () => {
           </Card>
         </div>
 
+        {/* Scientific Foundation - Simplified and Moved Lower */}
+        <div className="mb-16 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6">
+          <div className="text-center mb-4">
+            <BookOpen className="w-8 h-8 mx-auto mb-2 text-blue-600" />
+            <h2 className="text-xl font-bold text-gray-900 mb-2">🧠 Почему это работает</h2>
+          </div>
+          <Card className="p-4 bg-white/90 backdrop-blur-sm border-l-4 border-[#FECD02]">
+            <p className="text-gray-800 text-base leading-relaxed">
+              <strong>Джеймс Клир</strong> в книге <em>«Atomic Habits»</em> доказал: когда ты даёшь обещание другому человеку — 
+              вероятность выполнить задачу <strong>увеличивается в разы</strong>. 📈 
+              Это работает, потому что мы не хотим подводить тех, кто на нас рассчитывает.
+            </p>
+            <div className="mt-3 text-xs">
+              <a 
+                href="https://summit-of-self.com/atomic-habits-17-strengthening-commitments-with-habit-contracts-accountability-partners/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:underline font-medium"
+              >
+                Подробнее о научных исследованиях →
+              </a>
+            </div>
+          </Card>
+        </div>
+
         {/* Social Proof */}
         <div className="mb-16">
           <h2 className="text-3xl font-bold text-center mb-8 text-gray-900">💬 Что говорят школьники</h2>
@@ -220,12 +252,21 @@ const NewLandingPage = () => {
 
         {/* Final CTA */}
         <div className="text-center mb-16">
-          <Button 
-            onClick={handleCTAClick}
-            className="bg-[#FECD02] hover:bg-[#FECD02]/90 text-black px-12 py-4 text-xl font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-          >
-            🚀 Начать учиться вместе
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button 
+              onClick={handleCTAClick}
+              className="bg-[#FECD02] hover:bg-[#FECD02]/90 text-black px-12 py-4 text-xl font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+            >
+              🚀 Начать учиться вместе
+            </Button>
+            <Button 
+              onClick={handleCTAClick}
+              variant="outline"
+              className="border-2 border-[#FECD02] text-[#FECD02] hover:bg-[#FECD02] hover:text-black px-12 py-4 text-xl font-semibold rounded-lg transition-all duration-300"
+            >
+              📝 Подать заявку сейчас
+            </Button>
+          </div>
         </div>
       </div>
 

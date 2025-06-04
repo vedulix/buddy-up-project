@@ -6,6 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Slider } from '@/components/ui/slider';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { analytics } from '@/utils/analytics';
@@ -19,6 +20,7 @@ const ExtendedQuestionnaire = () => {
     subjects: [] as string[],
     level: '',
     examScore: '',
+    selfAssessment: [5],
     email: '',
     telegram: ''
   });
@@ -95,7 +97,7 @@ const ExtendedQuestionnaire = () => {
       case 'subjects':
         return answers.subjects.length > 0;
       case 'level':
-        return answers.level !== '' || answers.examScore !== '';
+        return answers.level !== '' || answers.examScore !== '' || answers.selfAssessment[0] >= 1;
       case 'contacts':
         return answers.email !== '' && answers.telegram !== '';
       default:
@@ -173,16 +175,37 @@ const ExtendedQuestionnaire = () => {
       case 'conditional':
         if (answers.goals.some(goal => goal.includes('ЕГЭ') || goal.includes('ОГЭ'))) {
           return (
-            <div className="space-y-4">
-              <Label htmlFor="examScore" className="text-lg">📊 Баллы последнего пробника:</Label>
-              <Input
-                id="examScore"
-                type="number"
-                placeholder="Введи количество баллов"
-                value={answers.examScore}
-                onChange={(e) => handleAnswerChange('examScore', e.target.value)}
-                className="text-lg p-4"
-              />
+            <div className="space-y-6">
+              <div>
+                <Label htmlFor="examScore" className="text-lg block mb-4">📊 Баллы последнего пробника (если сдавал):</Label>
+                <Input
+                  id="examScore"
+                  type="number"
+                  placeholder="Введи количество баллов или оставь пустым"
+                  value={answers.examScore}
+                  onChange={(e) => handleAnswerChange('examScore', e.target.value)}
+                  className="text-lg p-4 mb-6"
+                />
+              </div>
+              
+              <div className="border-t pt-6">
+                <Label className="text-lg block mb-4">🎯 Если не сдавал пробник, оцени свой уровень по шкале от 1 до 10:</Label>
+                <div className="px-4">
+                  <Slider
+                    value={answers.selfAssessment}
+                    onValueChange={(value) => handleAnswerChange('selfAssessment', value)}
+                    max={10}
+                    min={1}
+                    step={1}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-sm text-gray-500 mt-2">
+                    <span>1 (начинаю с нуля)</span>
+                    <span className="font-semibold text-lg text-[#FECD02]">{answers.selfAssessment[0]}/10</span>
+                    <span>10 (готов на 100%)</span>
+                  </div>
+                </div>
+              </div>
             </div>
           );
         } else if (answers.goals.some(goal => goal.includes('Олимпиады'))) {
@@ -201,7 +224,26 @@ const ExtendedQuestionnaire = () => {
             </RadioGroup>
           );
         }
-        return <p className="text-lg text-gray-600">✨ Отлично! Мы учтём твою цель при подборе напарника.</p>;
+        return (
+          <div className="space-y-6">
+            <p className="text-lg text-gray-600">✨ Отлично! Оцени свой текущий уровень по шкале от 1 до 10:</p>
+            <div className="px-4">
+              <Slider
+                value={answers.selfAssessment}
+                onValueChange={(value) => handleAnswerChange('selfAssessment', value)}
+                max={10}
+                min={1}
+                step={1}
+                className="w-full"
+              />
+              <div className="flex justify-between text-sm text-gray-500 mt-2">
+                <span>1 (начинаю с нуля)</span>
+                <span className="font-semibold text-lg text-[#FECD02]">{answers.selfAssessment[0]}/10</span>
+                <span>10 (эксперт в области)</span>
+              </div>
+            </div>
+          </div>
+        );
 
       case 'contacts':
         return (
