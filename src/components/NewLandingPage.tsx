@@ -173,27 +173,43 @@ const NewLandingPage = () => {
               <p className="text-gray-700">Дисциплина, обмен знаниями, общие цели и поддержка в чате</p>
             </div>
           </div>
-          
-          {/* Hub Bot Screenshots - Now prominently placed */}
-          <div className="mt-12 max-w-4xl mx-auto">
-            <h3 className="text-2xl font-bold text-gray-900 mb-6">💬 Как выглядит работа в @hub_hub_bot</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card className="p-4 bg-gray-50/50 hover:shadow-lg transition-shadow">
+        </div>
+
+        {/* Interactive Hub Bot Screenshots */}
+        <div className="mb-16">
+          <div className="text-center mb-8">
+            <h3 className="text-2xl font-bold text-gray-900 mb-4">💬 Как выглядит работа в @hub_hub_bot</h3>
+            <p className="text-gray-600">Наведи мышку на скриншот, чтобы рассмотреть детали</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 p-6 transition-all duration-500 hover:shadow-2xl hover:scale-105">
+              <div className="relative overflow-hidden rounded-lg">
                 <img 
                   src="/lovable-uploads/7499d5c7-f716-4382-9aaf-286fcdde9bd0.png" 
                   alt="Hub bot - обмен голосовыми сообщениями"
-                  className="rounded-lg shadow-md w-full h-32 object-contain mb-3"
+                  className="w-full h-40 object-contain transition-all duration-500 group-hover:scale-110 group-hover:h-64"
                 />
-                <p className="text-gray-700 font-medium">🎙️ Голосовые отчеты о прогрессе</p>
-              </Card>
-              <Card className="p-4 bg-gray-50/50 hover:shadow-lg transition-shadow">
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-300 rounded-lg"></div>
+              </div>
+              <div className="mt-4 text-center">
+                <p className="text-gray-700 font-medium text-lg group-hover:text-[#FECD02] transition-colors duration-300">🎙️ Голосовые отчеты о прогрессе</p>
+                <p className="text-sm text-gray-500 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">Обменивайтесь голосовыми сообщениями с напарником</p>
+              </div>
+            </div>
+            
+            <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 p-6 transition-all duration-500 hover:shadow-2xl hover:scale-105">
+              <div className="relative overflow-hidden rounded-lg">
                 <img 
                   src="/lovable-uploads/fcb26a98-9055-4ccb-b781-6a87ef72ea03.png" 
                   alt="Hub bot - система отчетности"
-                  className="rounded-lg shadow-md w-full h-32 object-contain mb-3"
+                  className="w-full h-40 object-contain transition-all duration-500 group-hover:scale-110 group-hover:h-64"
                 />
-                <p className="text-gray-700 font-medium">📊 Ежедневная система отчетности</p>
-              </Card>
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-300 rounded-lg"></div>
+              </div>
+              <div className="mt-4 text-center">
+                <p className="text-gray-700 font-medium text-lg group-hover:text-[#FECD02] transition-colors duration-300">📊 Ежедневная система отчетности</p>
+                <p className="text-sm text-gray-500 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">Отслеживайте прогресс и поддерживайте дисциплину</p>
+              </div>
             </div>
           </div>
         </div>
