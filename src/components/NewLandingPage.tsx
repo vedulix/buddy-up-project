@@ -171,21 +171,29 @@ const NewLandingPage = () => {
               <div className="bg-[#FECD02] text-black rounded-full w-12 h-12 flex items-center justify-center text-xl font-bold mb-4">4</div>
               <h3 className="text-lg font-semibold mb-2 text-gray-900">📱 Совместная учеба в @hub_hub_bot</h3>
               <p className="text-gray-700">Дисциплина, обмен знаниями, общие цели и поддержка в чате</p>
-              
-              {/* Hub Bot Screenshots */}
-              <div className="mt-4 grid grid-cols-1 gap-2 max-w-xs">
+            </div>
+          </div>
+          
+          {/* Hub Bot Screenshots - Now prominently placed */}
+          <div className="mt-12 max-w-4xl mx-auto">
+            <h3 className="text-2xl font-bold text-gray-900 mb-6">💬 Как выглядит работа в @hub_hub_bot</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card className="p-4 bg-gray-50/50 hover:shadow-lg transition-shadow">
                 <img 
                   src="/lovable-uploads/7499d5c7-f716-4382-9aaf-286fcdde9bd0.png" 
                   alt="Hub bot - обмен голосовыми сообщениями"
-                  className="rounded-lg shadow-md w-full h-24 object-cover"
+                  className="rounded-lg shadow-md w-full h-48 object-cover mb-3"
                 />
+                <p className="text-gray-700 font-medium">🎙️ Голосовые отчеты о прогрессе</p>
+              </Card>
+              <Card className="p-4 bg-gray-50/50 hover:shadow-lg transition-shadow">
                 <img 
                   src="/lovable-uploads/fcb26a98-9055-4ccb-b781-6a87ef72ea03.png" 
                   alt="Hub bot - система отчетности"
-                  className="rounded-lg shadow-md w-full h-24 object-cover"
+                  className="rounded-lg shadow-md w-full h-48 object-cover mb-3"
                 />
-              </div>
-              <p className="text-xs text-gray-600 mt-2">💬 Голосовые отчеты и взаимная поддержка</p>
+                <p className="text-gray-700 font-medium">📊 Ежедневная система отчетности</p>
+              </Card>
             </div>
           </div>
         </div>
