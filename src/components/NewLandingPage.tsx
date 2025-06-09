@@ -182,7 +182,7 @@ const NewLandingPage = () => {
                 <img 
                   src="/lovable-uploads/7499d5c7-f716-4382-9aaf-286fcdde9bd0.png" 
                   alt="Hub bot - обмен голосовыми сообщениями"
-                  className="rounded-lg shadow-md w-full h-48 object-cover mb-3"
+                  className="rounded-lg shadow-md w-full h-32 object-contain mb-3"
                 />
                 <p className="text-gray-700 font-medium">🎙️ Голосовые отчеты о прогрессе</p>
               </Card>
@@ -190,7 +190,7 @@ const NewLandingPage = () => {
                 <img 
                   src="/lovable-uploads/fcb26a98-9055-4ccb-b781-6a87ef72ea03.png" 
                   alt="Hub bot - система отчетности"
-                  className="rounded-lg shadow-md w-full h-48 object-cover mb-3"
+                  className="rounded-lg shadow-md w-full h-32 object-contain mb-3"
                 />
                 <p className="text-gray-700 font-medium">📊 Ежедневная система отчетности</p>
               </Card>
@@ -249,16 +249,6 @@ const NewLandingPage = () => {
               </a>
             </div>
           </Card>
-        </div>
-
-        {/* Final CTA */}
-        <div className="text-center mb-16">
-          <Button 
-            onClick={handleCTAClick}
-            className="bg-[#FECD02] hover:bg-[#FECD02]/90 text-black px-12 py-4 text-xl font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-          >
-            🚀 Начать учиться вместе
-          </Button>
         </div>
       </div>
 
