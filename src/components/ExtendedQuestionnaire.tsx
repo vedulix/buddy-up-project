@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -129,7 +128,7 @@ const ExtendedQuestionnaire = () => {
         }
         break;
       case 'subjects':
-        if (answers.subjects.length === 0) errors.subjects = 'Выберите хотя бы один предмет';
+        if (!answers.subjects || answers.subjects.length === 0) errors.subjects = 'Выберите хотя бы один предмет';
         break;
       case 'level':
         // Level is always valid with slider
@@ -150,11 +149,11 @@ const ExtendedQuestionnaire = () => {
     const current = steps[currentStep];
     switch (current.id) {
       case 'grade':
-        return answers.grade !== '';
+        return !!answers.grade;
       case 'goals':
-        return answers.goals !== '';
+        return !!answers.goals;
       case 'subjects':
-        return answers.subjects.length > 0;
+        return answers.subjects && answers.subjects.length > 0;
       case 'level':
         return true; // Always valid with slider
       case 'contacts':
@@ -239,7 +238,7 @@ const ExtendedQuestionnaire = () => {
               <div key={option} className="flex items-center space-x-4 p-4 rounded-xl hover:bg-gray-50 transition-colors border-2 border-gray-100 hover:border-[#FECD02]">
                 <Checkbox
                   id={option}
-                  checked={(answers[step.id as keyof typeof answers] as string[]).includes(option)}
+                  checked={(answers[step.id as keyof typeof answers] as string[])?.includes(option) || false}
                   onCheckedChange={() => handleCheckboxToggle(step.id, option)}
                   className="border-[#FECD02] text-[#FECD02]"
                 />
