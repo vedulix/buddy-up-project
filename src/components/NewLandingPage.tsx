@@ -15,8 +15,8 @@ const NewLandingPage = () => {
     analytics.track('page_view', { page: 'landing' });
     
     // Get real application count
-    const stats = analytics.getStats();
-    setApplicationsCount(stats.filledForms);
+    const realCount = parseInt(localStorage.getItem('applications_count') || '0');
+    setApplicationsCount(realCount);
   }, []);
 
   const handleCTAClick = () => {

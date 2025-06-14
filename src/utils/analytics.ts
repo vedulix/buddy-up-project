@@ -57,14 +57,20 @@ const analytics: Analytics = {
     } else {
       console.log('[Analytics] Submit Application:', data);
     }
+    
+    // Increment real counter in localStorage
+    const currentCount = parseInt(localStorage.getItem('applications_count') || '0');
+    localStorage.setItem('applications_count', (currentCount + 1).toString());
   },
 
   getStats: () => {
-    // Mock data for now - in real implementation this would fetch from PostHog API
+    // Get real application count from localStorage
+    const realApplicationsCount = parseInt(localStorage.getItem('applications_count') || '0');
+    
     return {
       totalVisits: Math.floor(Math.random() * 1000) + 100,
       uniqueVisitors: Math.floor(Math.random() * 500) + 50,
-      filledForms: Math.floor(Math.random() * 50) + 10,
+      filledForms: realApplicationsCount,
       conversionRate: Math.floor(Math.random() * 20) + 5
     };
   },
