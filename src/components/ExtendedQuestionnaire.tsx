@@ -33,19 +33,19 @@ const ExtendedQuestionnaire = () => {
   const steps = [
     {
       id: 'grade',
-      title: '🎓 В каком ты классе?',
+      title: '🎓 В каком ты классе или на каком этапе обучения?',
       type: 'radio',
-      options: ['9', '10', '11']
+      options: ['9', '10', '11', 'Выпускник (поступаю) 🎯', 'Студент 1-2 курс 📚', 'Студент 3-4 курс 🎓']
     },
     {
       id: 'goals',
       title: '🎯 Какие у тебя цели?',
       type: 'checkbox',
-      options: ['ЕГЭ 📚', 'ОГЭ 📝', 'Олимпиады 🏆', 'Проекты 💡']
+      options: ['ЕГЭ 📚', 'ОГЭ 📝', 'Олимпиады 🏆', 'Проекты 💡', 'Курсовые работы 📄', 'Диплом/ВКР 🎓', 'Стажировки 💼', 'Изучение новых навыков 🚀']
     },
     {
       id: 'subjects',
-      title: '📖 Какие предметы хочешь ботать вместе с напарником?',
+      title: '📖 Какие предметы/направления хочешь ботать вместе с напарником?',
       type: 'checkbox',
       options: [
         'Русский язык 📝',
@@ -56,6 +56,12 @@ const ExtendedQuestionnaire = () => {
         'Биология 🧬',
         'История 📜',
         'Обществознание 🏛️',
+        'Программирование 👨‍💻',
+        'Дизайн 🎨',
+        'Экономика 💰',
+        'Английский язык 🌍',
+        'Маркетинг 📈',
+        'Проектная деятельность 🔧',
         'Другое ❓'
       ]
     },
@@ -121,8 +127,8 @@ const ExtendedQuestionnaire = () => {
       // Clean up emoji from answers for storage
       const cleanAnswers = {
         ...answers,
-        goals: answers.goals.map(goal => goal.replace(/\s*[📚📝🏆💡]\s*$/, '')),
-        subjects: answers.subjects.map(subject => subject.replace(/\s*[📝🔢💻⚡🧪🧬📜🏛️❓]\s*$/, ''))
+        goals: answers.goals.map(goal => goal.replace(/\s*[📚📝🏆💡📄🎓💼🚀]\s*$/, '')),
+        subjects: answers.subjects.map(subject => subject.replace(/\s*[📝🔢💻⚡🧪🧬📜🏛️👨‍💻🎨💰🌍📈🔧❓]\s*$/, ''))
       };
       
       analytics.submitApplication(cleanAnswers);
@@ -173,6 +179,7 @@ const ExtendedQuestionnaire = () => {
         );
 
       case 'conditional':
+        // Check if user selected exam-related goals
         if (answers.goals.some(goal => goal.includes('ЕГЭ') || goal.includes('ОГЭ'))) {
           return (
             <div className="space-y-6">
@@ -208,7 +215,9 @@ const ExtendedQuestionnaire = () => {
               </div>
             </div>
           );
-        } else if (answers.goals.some(goal => goal.includes('Олимпиады'))) {
+        } 
+        // Check if user selected olympiad goals
+        else if (answers.goals.some(goal => goal.includes('Олимпиады'))) {
           return (
             <RadioGroup 
               value={answers.level} 
@@ -224,6 +233,24 @@ const ExtendedQuestionnaire = () => {
             </RadioGroup>
           );
         }
+        // Check if user selected student-related goals
+        else if (answers.goals.some(goal => goal.includes('Курсовые') || goal.includes('Диплом') || goal.includes('Стажировки') || goal.includes('Проекты'))) {
+          return (
+            <RadioGroup 
+              value={answers.level} 
+              onValueChange={(value) => handleAnswerChange('level', value)}
+              className="space-y-4"
+            >
+              {['🌱 Начинающий уровень', '📚 Базовый уровень', '⚡ Продвинутый уровень', '🚀 Экспертный уровень', '🎯 Готов помогать другим'].map((level) => (
+                <div key={level} className="flex items-center space-x-3 p-4 rounded-lg hover:bg-gray-50 transition-colors border">
+                  <RadioGroupItem value={level} id={level} />
+                  <Label htmlFor={level} className="text-lg cursor-pointer flex-1">{level}</Label>
+                </div>
+              ))}
+            </RadioGroup>
+          );
+        }
+        // Default case - general self-assessment
         return (
           <div className="space-y-6">
             <p className="text-lg text-gray-600">✨ Отлично! Оцени свой текущий уровень по шкале от 1 до 10:</p>
