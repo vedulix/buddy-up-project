@@ -154,14 +154,29 @@ class AnalyticsService {
     return this.applications
       .sort((a, b) => b.timestamp - a.timestamp)
       .slice(0, limit)
-      .map(app => ({
-        id: app.id,
-        grade: app.grade,
-        goals: app.goals.join(', '),
-        subjects: app.subjects.join(', '),
-        level: app.level || app.examScore,
-        date: new Date(app.timestamp).toLocaleString('ru-RU')
-      }));
+      .map(app => {
+        // Defensive conversion for goals and subjects
+        const goalsArr =
+          Array.isArray(app.goals)
+            ? app.goals
+            : typeof app.goals === "string"
+              ? [app.goals]
+              : [];
+        const subjectsArr =
+          Array.isArray(app.subjects)
+            ? app.subjects
+            : typeof app.subjects === "string"
+              ? [app.subjects]
+              : [];
+        return {
+          id: app.id,
+          grade: app.grade,
+          goals: goalsArr.join(", "),
+          subjects: subjectsArr.join(", "),
+          level: app.level || app.examScore,
+          date: new Date(app.timestamp).toLocaleString("ru-RU")
+        };
+      });
   }
 
   getUTMStats() {
