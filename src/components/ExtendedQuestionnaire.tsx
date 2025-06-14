@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -35,7 +34,7 @@ const ExtendedQuestionnaire = () => {
       id: 'grade',
       title: '🎓 В каком ты классе?',
       type: 'radio',
-      options: ['9', '10', '11']
+      options: ['9', '10', '11', 'Выпускник', 'Студент']
     },
     {
       id: 'goals',
