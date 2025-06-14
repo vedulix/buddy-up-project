@@ -20,7 +20,7 @@ interface ApplicationData {
   goals: string[];
   subjects: string[];
   level: string;
-  exam_score?: string;
+  exam_score?: string | null;
   email: string;
   telegram: string;
   utm_source?: string;

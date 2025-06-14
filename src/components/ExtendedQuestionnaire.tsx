@@ -120,10 +120,10 @@ const ExtendedQuestionnaire = () => {
       // Clean up emoji from answers for storage
       const cleanAnswers = {
         grade: answers.grade,
-        goals: answers.goals.map(goal => goal.replace(/\s*[📚📝🏆💡]\s*$/, '')),
-        subjects: answers.subjects.map(subject => subject.replace(/\s*[📝🔢💻⚡🧪🧬📜🏛️❓]\s*$/, '')),
+        goals: answers.goals.map(goal => goal.slice(0, -2).trim()),
+        subjects: answers.subjects.map(subject => subject.slice(0, -2).trim()),
         level: answers.level || `Самооценка: ${answers.selfAssessment[0]}/10`,
-        exam_score: answers.examScore || undefined,
+        exam_score: answers.examScore || null,
         email: answers.email,
         telegram: answers.telegram
       };
