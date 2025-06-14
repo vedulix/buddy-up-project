@@ -33,10 +33,9 @@ const ExtendedQuestionnaire = () => {
       shortTitle: 'Статус',
       type: 'radio',
       options: [
-        'Школьник 9-11 класс 📚',
-        'Выпускник (готовлюсь к поступлению) 🎯', 
-        'Студент 1-2 курс 📖',
-        'Студент старших курсов 🎓'
+        'Школьник 📚',
+        'Выпускник 🎯', 
+        'Студент 📖'
       ]
     },
     {
@@ -45,10 +44,9 @@ const ExtendedQuestionnaire = () => {
       shortTitle: 'Цель',
       type: 'radio',
       options: [
-        'Подготовиться к экзаменам (ЕГЭ/ОГЭ) 📝',
-        'Изучить новые навыки/предметы 🚀',
-        'Сделать проект или курсовую 💡',
-        'Участвовать в олимпиадах 🏆'
+        'Подготовиться к экзаменам 📝',
+        'Изучить новые навыки 🚀',
+        'Сделать проект 💡'
       ]
     },
     {
@@ -58,7 +56,7 @@ const ExtendedQuestionnaire = () => {
       type: 'checkbox',
       options: [
         'Математика 🔢',
-        'Информатика/Программирование 💻',
+        'Информатика 💻',
         'Физика ⚡',
         'Русский язык 📝',
         'Английский язык 🌍',
@@ -126,7 +124,7 @@ const ExtendedQuestionnaire = () => {
         if (!answers.grade) errors.grade = 'Выберите ваш статус';
         break;
       case 'goals':
-        if (!answers.goals || (Array.isArray(answers.goals) && answers.goals.length === 0)) {
+        if (!answers.goals) {
           errors.goals = 'Выберите вашу цель';
         }
         break;
@@ -182,8 +180,7 @@ const ExtendedQuestionnaire = () => {
       
       const cleanAnswers = {
         ...answers,
-        goals: typeof answers.goals === 'string' ? answers.goals.replace(/\s*[📝🚀💡🏆]\s*$/, '') : 
-               Array.isArray(answers.goals) ? answers.goals.map(goal => goal.replace(/\s*[📝🚀💡🏆]\s*$/, '')) : answers.goals,
+        goals: answers.goals.replace(/\s*[📝🚀💡🏆]\s*$/, ''),
         subjects: answers.subjects.map(subject => subject.replace(/\s*[🔢💻⚡📝🌍🏛️❓]\s*$/, ''))
       };
       
@@ -220,13 +217,7 @@ const ExtendedQuestionnaire = () => {
           <div className="space-y-4">
             <RadioGroup 
               value={answers[step.id as keyof typeof answers] as string} 
-              onValueChange={(value) => {
-                if (step.id === 'goals') {
-                  handleRadioChange(step.id, value);
-                } else {
-                  handleRadioChange(step.id, value);
-                }
-              }}
+              onValueChange={(value) => handleRadioChange(step.id, value)}
               className="space-y-4"
             >
               {step.options?.map((option) => (
