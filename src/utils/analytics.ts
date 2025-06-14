@@ -1,3 +1,4 @@
+
 import { parseUTMFromURL, UTMData } from './utm';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -69,6 +70,14 @@ class AnalyticsService {
     localStorage.setItem('studybuddy_utm', JSON.stringify(newUtm));
   }
 
+  // Helper function to clean UTM values
+  private cleanUTMValue(value: any): string | undefined {
+    if (!value || value === 'undefined' || (typeof value === 'object' && value._type === 'undefined')) {
+      return undefined;
+    }
+    return typeof value === 'string' ? value : String(value);
+  }
+
   async track(event: string, data?: any, utmOverride?: UTMData) {
     const eventUTM = utmOverride || this.utm;
     const analyticsEvent: AnalyticsEvent = {
@@ -76,11 +85,11 @@ class AnalyticsService {
       session_id: this.sessionId,
       route: window.location.pathname,
       data: data ? JSON.stringify(data) : null,
-      utm_source: eventUTM.utm_source,
-      utm_medium: eventUTM.utm_medium,
-      utm_campaign: eventUTM.utm_campaign,
-      utm_term: eventUTM.utm_term,
-      utm_content: eventUTM.utm_content
+      utm_source: this.cleanUTMValue(eventUTM.utm_source),
+      utm_medium: this.cleanUTMValue(eventUTM.utm_medium),
+      utm_campaign: this.cleanUTMValue(eventUTM.utm_campaign),
+      utm_term: this.cleanUTMValue(eventUTM.utm_term),
+      utm_content: this.cleanUTMValue(eventUTM.utm_content)
     };
 
     console.log('📊 Tracking event:', event, analyticsEvent);
@@ -104,11 +113,11 @@ class AnalyticsService {
     const application: ApplicationData = {
       ...applicationData,
       session_id: this.sessionId,
-      utm_source: this.utm.utm_source,
-      utm_medium: this.utm.utm_medium,
-      utm_campaign: this.utm.utm_campaign,
-      utm_term: this.utm.utm_term,
-      utm_content: this.utm.utm_content
+      utm_source: this.cleanUTMValue(this.utm.utm_source),
+      utm_medium: this.cleanUTMValue(this.utm.utm_medium),
+      utm_campaign: this.cleanUTMValue(this.utm.utm_campaign),
+      utm_term: this.cleanUTMValue(this.utm.utm_term),
+      utm_content: this.cleanUTMValue(this.utm.utm_content)
     };
 
     console.log('📝 Submitting application:', application);
@@ -122,6 +131,7 @@ class AnalyticsService {
 
       if (error) {
         console.error('❌ Error submitting application:', error);
+        console.error('❌ Error details:', JSON.stringify(error, null, 2));
         return null;
       }
 
@@ -130,6 +140,7 @@ class AnalyticsService {
       return data;
     } catch (error) {
       console.error('❌ Error submitting application:', error);
+      console.error('❌ Catch block error details:', JSON.stringify(error, null, 2));
       return null;
     }
   }
