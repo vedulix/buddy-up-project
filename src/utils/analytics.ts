@@ -1,36 +1,41 @@
+
 import { parseUTMFromURL, UTMData } from './utm';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AnalyticsEvent {
-  event: string;
-  timestamp: number;
-  sessionId: string;
+  event_type: string;
+  session_id: string;
   route?: string;
   data?: any;
-  utm?: UTMData;
+  utm_source?: string;
+  utm_medium?: string;
+  utm_campaign?: string;
+  utm_term?: string;
+  utm_content?: string;
 }
 
 interface ApplicationData {
-  id: string;
+  session_id: string;
   grade: string;
   goals: string[];
   subjects: string[];
   level: string;
-  examScore: string;
+  exam_score?: string;
   email: string;
   telegram: string;
-  timestamp: number;
-  sessionId: string;
+  utm_source?: string;
+  utm_medium?: string;
+  utm_campaign?: string;
+  utm_term?: string;
+  utm_content?: string;
 }
 
 class AnalyticsService {
   private sessionId: string;
-  private events: AnalyticsEvent[] = [];
-  private applications: ApplicationData[] = [];
   private utm: UTMData = {};
 
   constructor() {
     this.sessionId = this.generateSessionId();
-    this.loadFromLocalStorage();
     this.loadOrExtractUTM();
   }
 
@@ -54,30 +59,8 @@ class AnalyticsService {
     }
   }
 
-  private loadFromLocalStorage() {
-    try {
-      const storedEvents = localStorage.getItem('studybuddy_events');
-      const storedApplications = localStorage.getItem('studybuddy_applications');
-      
-      if (storedEvents) {
-        this.events = JSON.parse(storedEvents);
-      }
-      
-      if (storedApplications) {
-        this.applications = JSON.parse(storedApplications);
-      }
-    } catch (error) {
-      console.error('Error loading analytics data:', error);
-    }
-  }
-
-  private saveToLocalStorage() {
-    try {
-      localStorage.setItem('studybuddy_events', JSON.stringify(this.events));
-      localStorage.setItem('studybuddy_applications', JSON.stringify(this.applications));
-    } catch (error) {
-      console.error('Error saving analytics data:', error);
-    }
+  private getUserAgent(): string {
+    return navigator.userAgent || '';
   }
 
   updateUTM(newUtm: UTMData) {
@@ -86,60 +69,130 @@ class AnalyticsService {
     localStorage.setItem('studybuddy_utm', JSON.stringify(newUtm));
   }
 
-  track(event: string, data?: any, utmOverride?: UTMData) {
+  async track(event: string, data?: any, utmOverride?: UTMData) {
     const eventUTM = utmOverride || this.utm;
     const analyticsEvent: AnalyticsEvent = {
-      event,
-      timestamp: Date.now(),
-      sessionId: this.sessionId,
+      event_type: event,
+      session_id: this.sessionId,
       route: window.location.pathname,
-      data,
-      utm: eventUTM
+      data: data ? JSON.stringify(data) : null,
+      utm_source: eventUTM.utm_source,
+      utm_medium: eventUTM.utm_medium,
+      utm_campaign: eventUTM.utm_campaign,
+      utm_term: eventUTM.utm_term,
+      utm_content: eventUTM.utm_content
     };
 
-    this.events.push(analyticsEvent);
-    this.saveToLocalStorage();
-    
-    console.log('Analytics event:', analyticsEvent);
+    try {
+      const { error } = await supabase
+        .from('analytics_events')
+        .insert(analyticsEvent);
+      
+      if (error) {
+        console.error('Error tracking event:', error);
+      } else {
+        console.log('Analytics event tracked:', event);
+      }
+    } catch (error) {
+      console.error('Error tracking event:', error);
+    }
   }
 
-  submitApplication(applicationData: Omit<ApplicationData, 'id' | 'timestamp' | 'sessionId'>) {
+  async submitApplication(applicationData: Omit<ApplicationData, 'session_id'>) {
     const application: ApplicationData = {
       ...applicationData,
-      id: `app_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      timestamp: Date.now(),
-      sessionId: this.sessionId
+      session_id: this.sessionId,
+      utm_source: this.utm.utm_source,
+      utm_medium: this.utm.utm_medium,
+      utm_campaign: this.utm.utm_campaign,
+      utm_term: this.utm.utm_term,
+      utm_content: this.utm.utm_content
     };
 
-    this.applications.push(application);
-    this.saveToLocalStorage();
-    this.track('form_submit', { applicationId: application.id });
-    
-    return application;
+    try {
+      const { data, error } = await supabase
+        .from('applications')
+        .insert(application)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error submitting application:', error);
+        return null;
+      }
+
+      this.track('form_submit', { applicationId: data.id });
+      return data;
+    } catch (error) {
+      console.error('Error submitting application:', error);
+      return null;
+    }
   }
 
-  getStats() {
-    const uniqueSessions = new Set(this.events.map(e => e.sessionId)).size;
-    const totalVisits = this.events.filter(e => e.event === 'page_view').length;
-    const ctaClicks = this.events.filter(e => e.event === 'cta_click').length;
-    const formStarts = this.events.filter(e => e.event === 'form_start').length;
-    const formSubmits = this.events.filter(e => e.event === 'form_submit').length;
-    
-    const conversionRate = uniqueSessions > 0 ? (formSubmits / uniqueSessions * 100) : 0;
+  async getStats() {
+    try {
+      // Get total visits (page_view events)
+      const { count: totalVisits } = await supabase
+        .from('analytics_events')
+        .select('*', { count: 'exact', head: true })
+        .eq('event_type', 'page_view');
 
-    return {
-      totalVisits,
-      uniqueVisitors: uniqueSessions,
-      ctaClicks,
-      formStarts,
-      filledForms: formSubmits,
-      conversionRate: Math.round(conversionRate * 10) / 10,
-      applications: this.applications
-    };
+      // Get unique visitors (unique session_ids)
+      const { data: uniqueSessionsData } = await supabase
+        .from('analytics_events')
+        .select('session_id')
+        .eq('event_type', 'page_view');
+
+      const uniqueVisitors = new Set(uniqueSessionsData?.map(e => e.session_id) || []).size;
+
+      // Get CTA clicks
+      const { count: ctaClicks } = await supabase
+        .from('analytics_events')
+        .select('*', { count: 'exact', head: true })
+        .eq('event_type', 'cta_click');
+
+      // Get form starts
+      const { count: formStarts } = await supabase
+        .from('analytics_events')
+        .select('*', { count: 'exact', head: true })
+        .eq('event_type', 'form_start');
+
+      // Get form submits
+      const { count: formSubmits } = await supabase
+        .from('analytics_events')
+        .select('*', { count: 'exact', head: true })
+        .eq('event_type', 'form_submit');
+
+      // Get applications count
+      const { count: applicationsCount } = await supabase
+        .from('applications')
+        .select('*', { count: 'exact', head: true });
+
+      const conversionRate = uniqueVisitors > 0 ? (applicationsCount || 0) / uniqueVisitors * 100 : 0;
+
+      return {
+        totalVisits: totalVisits || 0,
+        uniqueVisitors,
+        ctaClicks: ctaClicks || 0,
+        formStarts: formStarts || 0,
+        filledForms: applicationsCount || 0,
+        conversionRate: Math.round(conversionRate * 10) / 10
+      };
+    } catch (error) {
+      console.error('Error getting stats:', error);
+      return {
+        totalVisits: 0,
+        uniqueVisitors: 0,
+        ctaClicks: 0,
+        formStarts: 0,
+        filledForms: 0,
+        conversionRate: 0
+      };
+    }
   }
 
-  getFunnelData() {
-    const stats = this.getStats();
+  async getFunnelData() {
+    const stats = await this.getStats();
     const steps = [
       { step: 'Landing View', count: stats.uniqueVisitors, dropRate: 0 },
       { step: 'CTA Click', count: stats.ctaClicks, dropRate: stats.uniqueVisitors > 0 ? Math.round((1 - stats.ctaClicks / stats.uniqueVisitors) * 100) : 0 },
@@ -150,87 +203,108 @@ class AnalyticsService {
     return steps;
   }
 
-  getRecentApplications(limit: number = 10) {
-    return this.applications
-      .sort((a, b) => b.timestamp - a.timestamp)
-      .slice(0, limit)
-      .map(app => {
-        // Defensive conversion for goals and subjects
-        const goalsArr =
-          Array.isArray(app.goals)
-            ? app.goals
-            : typeof app.goals === "string"
-              ? [app.goals]
-              : [];
-        const subjectsArr =
-          Array.isArray(app.subjects)
-            ? app.subjects
-            : typeof app.subjects === "string"
-              ? [app.subjects]
-              : [];
-        return {
-          id: app.id,
-          grade: app.grade,
-          goals: goalsArr.join(", "),
-          subjects: subjectsArr.join(", "),
-          level: app.level || app.examScore,
-          date: new Date(app.timestamp).toLocaleString("ru-RU")
-        };
-      });
+  async getRecentApplications(limit: number = 10) {
+    try {
+      const { data, error } = await supabase
+        .from('applications')
+        .select('*')
+        .order('timestamp', { ascending: false })
+        .limit(limit);
+
+      if (error) {
+        console.error('Error getting recent applications:', error);
+        return [];
+      }
+
+      return data?.map(app => ({
+        id: app.id,
+        grade: app.grade,
+        goals: Array.isArray(app.goals) ? app.goals.join(', ') : app.goals,
+        subjects: Array.isArray(app.subjects) ? app.subjects.join(', ') : app.subjects,
+        level: app.level || app.exam_score,
+        date: new Date(app.timestamp).toLocaleString("ru-RU")
+      })) || [];
+    } catch (error) {
+      console.error('Error getting recent applications:', error);
+      return [];
+    }
   }
 
-  getUTMStats() {
-    // Returns stats grouped by utm_source + utm_campaign
-    const events = this.events.filter(event => event.utm && event.event === 'page_view');
-    const submits = this.events.filter(event => event.utm && event.event === 'form_submit');
-    const statsMap = new Map<string, {
-      utm_source: string, utm_campaign: string, utm_medium?: string, utm_term?: string, utm_content?: string,
-      clicks: number, submissions: number
-    }>();
+  async getUTMStats() {
+    try {
+      // Get page views with UTM data
+      const { data: pageViews } = await supabase
+        .from('analytics_events')
+        .select('utm_source, utm_campaign, utm_medium, utm_term, utm_content')
+        .eq('event_type', 'page_view')
+        .not('utm_source', 'is', null);
 
-    for (const event of events) {
-      const source = event.utm?.utm_source || 'direct';
-      const campaign = event.utm?.utm_campaign || '';
-      const key = `${source}::${campaign}`;
-      if (!statsMap.has(key)) {
-        statsMap.set(key, {
-          utm_source: source,
-          utm_campaign: campaign,
-          utm_medium: event.utm?.utm_medium,
-          utm_term: event.utm?.utm_term,
-          utm_content: event.utm?.utm_content,
-          clicks: 0,
-          submissions: 0
-        });
-      }
-      statsMap.get(key)!.clicks += 1;
+      // Get applications with UTM data
+      const { data: applications } = await supabase
+        .from('applications')
+        .select('utm_source, utm_campaign, utm_medium, utm_term, utm_content')
+        .not('utm_source', 'is', null);
+
+      const statsMap = new Map<string, {
+        utm_source: string;
+        utm_campaign: string;
+        utm_medium?: string;
+        utm_term?: string;
+        utm_content?: string;
+        clicks: number;
+        submissions: number;
+      }>();
+
+      // Process page views
+      pageViews?.forEach(event => {
+        const source = event.utm_source || 'direct';
+        const campaign = event.utm_campaign || '';
+        const key = `${source}::${campaign}`;
+        
+        if (!statsMap.has(key)) {
+          statsMap.set(key, {
+            utm_source: source,
+            utm_campaign: campaign,
+            utm_medium: event.utm_medium,
+            utm_term: event.utm_term,
+            utm_content: event.utm_content,
+            clicks: 0,
+            submissions: 0
+          });
+        }
+        statsMap.get(key)!.clicks += 1;
+      });
+
+      // Process applications
+      applications?.forEach(app => {
+        const source = app.utm_source || 'direct';
+        const campaign = app.utm_campaign || '';
+        const key = `${source}::${campaign}`;
+        
+        if (!statsMap.has(key)) {
+          statsMap.set(key, {
+            utm_source: source,
+            utm_campaign: campaign,
+            utm_medium: app.utm_medium,
+            utm_term: app.utm_term,
+            utm_content: app.utm_content,
+            clicks: 0,
+            submissions: 0
+          });
+        }
+        statsMap.get(key)!.submissions += 1;
+      });
+
+      return Array.from(statsMap.values())
+        .map(stat => ({
+          ...stat,
+          conversion: stat.clicks === 0 ? 0 : Math.round((stat.submissions / stat.clicks) * 1000) / 10
+        }))
+        .sort((a, b) => b.clicks - a.clicks);
+    } catch (error) {
+      console.error('Error getting UTM stats:', error);
+      return [];
     }
-
-    for (const submit of submits) {
-      const source = submit.utm?.utm_source || 'direct';
-      const campaign = submit.utm?.utm_campaign || '';
-      const key = `${source}::${campaign}`;
-      if (!statsMap.has(key)) {
-        // If someone managed to submit not from a click, create entry
-        statsMap.set(key, {
-          utm_source: source,
-          utm_campaign: campaign,
-          utm_medium: submit.utm?.utm_medium,
-          utm_term: submit.utm?.utm_term,
-          utm_content: submit.utm?.utm_content,
-          clicks: 0,
-          submissions: 0
-        });
-      }
-      statsMap.get(key)!.submissions += 1;
-    }
-
-    return Array.from(statsMap.values())
-      .map(stat => ({
-        ...stat,
-        conversion: stat.clicks === 0 ? 0 : Math.round((stat.submissions / stat.clicks) * 1000) / 10 // %
-      }))
-      .sort((a, b) => b.clicks - a.clicks);
   }
 }
 

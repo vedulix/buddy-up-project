@@ -9,7 +9,114 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      analytics_events: {
+        Row: {
+          data: Json | null
+          event_type: string
+          id: string
+          ip_address: unknown | null
+          route: string | null
+          session_id: string
+          timestamp: string
+          user_agent: string | null
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          utm_term: string | null
+        }
+        Insert: {
+          data?: Json | null
+          event_type: string
+          id?: string
+          ip_address?: unknown | null
+          route?: string | null
+          session_id: string
+          timestamp?: string
+          user_agent?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+        }
+        Update: {
+          data?: Json | null
+          event_type?: string
+          id?: string
+          ip_address?: unknown | null
+          route?: string | null
+          session_id?: string
+          timestamp?: string
+          user_agent?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+        }
+        Relationships: []
+      }
+      applications: {
+        Row: {
+          email: string
+          exam_score: string | null
+          goals: string[]
+          grade: string
+          id: string
+          ip_address: unknown | null
+          level: string
+          session_id: string
+          subjects: string[]
+          telegram: string
+          timestamp: string
+          user_agent: string | null
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          utm_term: string | null
+        }
+        Insert: {
+          email: string
+          exam_score?: string | null
+          goals: string[]
+          grade: string
+          id?: string
+          ip_address?: unknown | null
+          level: string
+          session_id: string
+          subjects: string[]
+          telegram: string
+          timestamp?: string
+          user_agent?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+        }
+        Update: {
+          email?: string
+          exam_score?: string | null
+          goals?: string[]
+          grade?: string
+          id?: string
+          ip_address?: unknown | null
+          level?: string
+          session_id?: string
+          subjects?: string[]
+          telegram?: string
+          timestamp?: string
+          user_agent?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

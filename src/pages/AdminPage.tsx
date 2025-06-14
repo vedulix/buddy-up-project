@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -15,6 +16,7 @@ const AdminPage = () => {
   const [funnelData, setFunnelData] = useState<Array<{step: string, count: number, dropRate: number}>>([]);
   const [recentApplications, setRecentApplications] = useState<Array<any>>([]);
   const [utmStats, setUtmStats] = useState<Array<any>>([]);
+  const [loading, setLoading] = useState(true);
 
   // Simple auth check
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -26,18 +28,25 @@ const AdminPage = () => {
     }
   }, [isAuthenticated]);
 
-  const loadRealData = () => {
-    const realStats = analytics.getStats();
-    setStats(realStats);
-    
-    const realFunnelData = analytics.getFunnelData();
-    setFunnelData(realFunnelData);
-    
-    const realApplications = analytics.getRecentApplications(10);
-    setRecentApplications(realApplications);
+  const loadRealData = async () => {
+    setLoading(true);
+    try {
+      const [realStats, realFunnelData, realApplications, utmData] = await Promise.all([
+        analytics.getStats(),
+        analytics.getFunnelData(),
+        analytics.getRecentApplications(10),
+        analytics.getUTMStats()
+      ]);
 
-    const utmData = analytics.getUTMStats();
-    setUtmStats(utmData);
+      setStats(realStats);
+      setFunnelData(realFunnelData);
+      setRecentApplications(realApplications);
+      setUtmStats(utmData);
+    } catch (error) {
+      console.error('Error loading analytics data:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleLogin = () => {
@@ -76,15 +85,27 @@ const AdminPage = () => {
     );
   }
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#FECD02] mx-auto"></div>
+          <p className="mt-4 text-gray-600">Загружаем данные аналитики...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-black mb-2">📊 Study Buddy Admin</h1>
-          <p className="text-gray-600">Панель управления и аналитика (реальные данные)</p>
+          <p className="text-gray-600">Панель управления и аналитика (данные из Supabase)</p>
           <button
             onClick={loadRealData}
             className="mt-2 bg-[#FECD02] text-black px-4 py-2 rounded-lg font-semibold"
+            disabled={loading}
           >
             🔄 Обновить данные
           </button>
@@ -136,7 +157,7 @@ const AdminPage = () => {
         {/* Funnel Analysis */}
         <Card className="mb-8">
           <CardHeader>
-            <CardTitle>🔍 Воронка конверсий (реальные данные)</CardTitle>
+            <CardTitle>🔍 Воронка конверсий (данные из Supabase)</CardTitle>
           </CardHeader>
           <CardContent>
             {funnelData.length > 0 ? (
@@ -169,9 +190,9 @@ const AdminPage = () => {
         </Card>
 
         {/* Recent Applications */}
-        <Card>
+        <Card className="mb-8">
           <CardHeader>
-            <CardTitle>📋 Последние заявки (реальные данные)</CardTitle>
+            <CardTitle>📋 Последние заявки (данные из Supabase)</CardTitle>
           </CardHeader>
           <CardContent>
             {recentApplications.length > 0 ? (
@@ -204,50 +225,48 @@ const AdminPage = () => {
         </Card>
 
         {/* UTM ANALYTICS SECTION */}
-        <div className="mt-10 mb-10">
-          <Card>
-            <CardHeader>
-              <CardTitle>📊 UTM Analytics — по источникам трафика</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {utmStats.length === 0 ? (
-                <p className="text-gray-500">Нет данных по переходам с UTM-метками</p>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>UTM Source</TableHead>
-                      <TableHead>UTM Campaign</TableHead>
-                      <TableHead>Клики</TableHead>
-                      <TableHead>Заявки</TableHead>
-                      <TableHead>Конверсия (%)</TableHead>
+        <Card>
+          <CardHeader>
+            <CardTitle>📊 UTM Analytics — по источникам трафика</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {utmStats.length === 0 ? (
+              <p className="text-gray-500">Нет данных по переходам с UTM-метками</p>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>UTM Source</TableHead>
+                    <TableHead>UTM Campaign</TableHead>
+                    <TableHead>Клики</TableHead>
+                    <TableHead>Заявки</TableHead>
+                    <TableHead>Конверсия (%)</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {utmStats.map((u, i) => (
+                    <TableRow key={i}>
+                      <TableCell>{u.utm_source}</TableCell>
+                      <TableCell>{u.utm_campaign || <span className="text-gray-400 italic">-</span>}</TableCell>
+                      <TableCell>{u.clicks}</TableCell>
+                      <TableCell>{u.submissions}</TableCell>
+                      <TableCell>
+                        <span className={u.conversion > 10 ? 'text-green-600' : u.conversion > 2 ? 'text-yellow-700' : 'text-gray-800 font-semibold'}>
+                          {u.conversion}%
+                        </span>
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {utmStats.map((u, i) => (
-                      <TableRow key={i}>
-                        <TableCell>{u.utm_source}</TableCell>
-                        <TableCell>{u.utm_campaign || <span className="text-gray-400 italic">-</span>}</TableCell>
-                        <TableCell>{u.clicks}</TableCell>
-                        <TableCell>{u.submissions}</TableCell>
-                        <TableCell>
-                          <span className={u.conversion > 10 ? 'text-green-600' : u.conversion > 2 ? 'text-yellow-700' : 'text-gray-800 font-semibold'}>
-                            {u.conversion}
-                          </span>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-              <div className="mt-2 text-xs text-gray-500">
-                <span className="italic">
-                  UTM-параметры (utm_source/utm_campaign) — переходы и заявки для отслеживания маркетинговых кампаний (например, постов в Telegram).
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+            <div className="mt-2 text-xs text-gray-500">
+              <span className="italic">
+                UTM-параметры (utm_source/utm_campaign) — переходы и заявки для отслеживания маркетинговых кампаний (например, постов в Telegram).
+              </span>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

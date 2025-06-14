@@ -1,3 +1,4 @@
+
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Clock, Users, TrendingUp, Timer, HandHeart, BarChart3, BookOpen, Target, Star, Zap, Calendar } from 'lucide-react';
@@ -11,16 +12,20 @@ const NewLandingPage = () => {
   const [applicationsCount, setApplicationsCount] = useState(0);
 
   useEffect(() => {
-    // Track page view and save UTM on every landing visit
-    const utm = parseUTMFromURL();
-    if (Object.values(utm).some(Boolean)) {
-      analytics.updateUTM(utm);
-    }
-    analytics.track('page_view', { page: 'landing' });
-    
-    // Get real application count
-    const stats = analytics.getStats();
-    setApplicationsCount(stats.filledForms);
+    const initAnalytics = async () => {
+      // Track page view and save UTM on every landing visit
+      const utm = parseUTMFromURL();
+      if (Object.values(utm).some(Boolean)) {
+        analytics.updateUTM(utm);
+      }
+      analytics.track('page_view', { page: 'landing' });
+      
+      // Get real application count from Supabase
+      const stats = await analytics.getStats();
+      setApplicationsCount(stats.filledForms);
+    };
+
+    initAnalytics();
   }, []);
 
   const handleCTAClick = () => {
@@ -101,7 +106,6 @@ const NewLandingPage = () => {
             </Card>
           </div>
 
-          {/* Job-specific Goals */}
           <div className="text-center">
             <h3 className="text-xl font-bold text-gray-900 mb-4">🎯 Наш сервис поможет тебе достичь:</h3>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -152,7 +156,6 @@ const NewLandingPage = () => {
           </Card>
         </div>
 
-        {/* How it works */}
         <div className="text-center mb-16">
           <h2 className="text-3xl font-bold mb-12 text-gray-900">🔄 Как это работает</h2>
           <div className="grid md:grid-cols-4 gap-8">
@@ -218,7 +221,6 @@ const NewLandingPage = () => {
           </div>
         </div>
 
-        {/* Compound Effect Visualization */}
         <div className="mb-16 text-center">
           <h2 className="text-3xl font-bold mb-8 text-gray-900">📊 Экспоненциальный рост</h2>
           <Card className="p-8 max-w-4xl mx-auto">
@@ -234,7 +236,6 @@ const NewLandingPage = () => {
           </Card>
         </div>
 
-        {/* Social Proof */}
         <div className="mb-16">
           <h2 className="text-3xl font-bold text-center mb-8 text-gray-900">💬 Что говорят школьники</h2>
           <div className="grid md:grid-cols-3 gap-6">
@@ -246,7 +247,6 @@ const NewLandingPage = () => {
           </div>
         </div>
 
-        {/* Scientific Foundation - Simplified and Moved Lower */}
         <div className="mb-16 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6">
           <div className="text-center mb-4">
             <BookOpen className="w-8 h-8 mx-auto mb-2 text-blue-600" />
