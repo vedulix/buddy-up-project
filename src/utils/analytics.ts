@@ -37,6 +37,7 @@ class AnalyticsService {
   constructor() {
     this.sessionId = this.generateSessionId();
     this.loadOrExtractUTM();
+    console.log('🔧 Analytics service initialized with session:', this.sessionId);
   }
 
   private generateSessionId(): string {
@@ -83,18 +84,20 @@ class AnalyticsService {
       utm_content: eventUTM.utm_content
     };
 
+    console.log('📊 Tracking event:', event, analyticsEvent);
+
     try {
       const { error } = await supabase
         .from('analytics_events')
         .insert(analyticsEvent);
       
       if (error) {
-        console.error('Error tracking event:', error);
+        console.error('❌ Error tracking event:', error);
       } else {
-        console.log('Analytics event tracked:', event);
+        console.log('✅ Analytics event tracked successfully:', event);
       }
     } catch (error) {
-      console.error('Error tracking event:', error);
+      console.error('❌ Error tracking event:', error);
     }
   }
 
@@ -109,6 +112,8 @@ class AnalyticsService {
       utm_content: this.utm.utm_content
     };
 
+    console.log('📝 Submitting application:', application);
+
     try {
       const { data, error } = await supabase
         .from('applications')
@@ -117,25 +122,29 @@ class AnalyticsService {
         .single();
 
       if (error) {
-        console.error('Error submitting application:', error);
+        console.error('❌ Error submitting application:', error);
         return null;
       }
 
+      console.log('✅ Application submitted successfully:', data);
       this.track('form_submit', { applicationId: data.id });
       return data;
     } catch (error) {
-      console.error('Error submitting application:', error);
+      console.error('❌ Error submitting application:', error);
       return null;
     }
   }
 
   async getStats() {
+    console.log('📈 Getting stats from Supabase...');
     try {
       // Get total visits (page_view events)
       const { count: totalVisits } = await supabase
         .from('analytics_events')
         .select('*', { count: 'exact', head: true })
         .eq('event_type', 'page_view');
+
+      console.log('👀 Total visits:', totalVisits);
 
       // Get unique visitors (unique session_ids)
       const { data: uniqueSessionsData } = await supabase
@@ -144,6 +153,7 @@ class AnalyticsService {
         .eq('event_type', 'page_view');
 
       const uniqueVisitors = new Set(uniqueSessionsData?.map(e => e.session_id) || []).size;
+      console.log('👥 Unique visitors:', uniqueVisitors);
 
       // Get CTA clicks
       const { count: ctaClicks } = await supabase
@@ -151,11 +161,15 @@ class AnalyticsService {
         .select('*', { count: 'exact', head: true })
         .eq('event_type', 'cta_click');
 
+      console.log('🖱️ CTA clicks:', ctaClicks);
+
       // Get form starts
       const { count: formStarts } = await supabase
         .from('analytics_events')
         .select('*', { count: 'exact', head: true })
         .eq('event_type', 'form_start');
+
+      console.log('📋 Form starts:', formStarts);
 
       // Get form submits
       const { count: formSubmits } = await supabase
@@ -163,14 +177,18 @@ class AnalyticsService {
         .select('*', { count: 'exact', head: true })
         .eq('event_type', 'form_submit');
 
+      console.log('✅ Form submits:', formSubmits);
+
       // Get applications count
       const { count: applicationsCount } = await supabase
         .from('applications')
         .select('*', { count: 'exact', head: true });
 
+      console.log('📝 Applications count:', applicationsCount);
+
       const conversionRate = uniqueVisitors > 0 ? (applicationsCount || 0) / uniqueVisitors * 100 : 0;
 
-      return {
+      const stats = {
         totalVisits: totalVisits || 0,
         uniqueVisitors,
         ctaClicks: ctaClicks || 0,
@@ -178,8 +196,11 @@ class AnalyticsService {
         filledForms: applicationsCount || 0,
         conversionRate: Math.round(conversionRate * 10) / 10
       };
+
+      console.log('📊 Final stats:', stats);
+      return stats;
     } catch (error) {
-      console.error('Error getting stats:', error);
+      console.error('❌ Error getting stats:', error);
       return {
         totalVisits: 0,
         uniqueVisitors: 0,
@@ -204,6 +225,7 @@ class AnalyticsService {
   }
 
   async getRecentApplications(limit: number = 10) {
+    console.log('📋 Getting recent applications from Supabase...');
     try {
       const { data, error } = await supabase
         .from('applications')
@@ -212,11 +234,13 @@ class AnalyticsService {
         .limit(limit);
 
       if (error) {
-        console.error('Error getting recent applications:', error);
+        console.error('❌ Error getting recent applications:', error);
         return [];
       }
 
-      return data?.map(app => ({
+      console.log('📝 Raw applications data:', data);
+
+      const formattedApps = data?.map(app => ({
         id: app.id,
         grade: app.grade,
         goals: Array.isArray(app.goals) ? app.goals.join(', ') : app.goals,
@@ -224,8 +248,11 @@ class AnalyticsService {
         level: app.level || app.exam_score,
         date: new Date(app.timestamp).toLocaleString("ru-RU")
       })) || [];
+
+      console.log('📊 Formatted applications:', formattedApps);
+      return formattedApps;
     } catch (error) {
-      console.error('Error getting recent applications:', error);
+      console.error('❌ Error getting recent applications:', error);
       return [];
     }
   }

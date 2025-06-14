@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -24,26 +23,39 @@ const AdminPage = () => {
 
   useEffect(() => {
     if (isAuthenticated) {
+      console.log('🔑 Admin authenticated, loading data...');
       loadRealData();
     }
   }, [isAuthenticated]);
 
   const loadRealData = async () => {
+    console.log('🔄 Starting to load admin data...');
     setLoading(true);
     try {
-      const [realStats, realFunnelData, realApplications, utmData] = await Promise.all([
-        analytics.getStats(),
-        analytics.getFunnelData(),
-        analytics.getRecentApplications(10),
-        analytics.getUTMStats()
-      ]);
+      console.log('📊 Fetching stats...');
+      const realStats = await analytics.getStats();
+      console.log('📈 Stats loaded:', realStats);
+
+      console.log('🔍 Fetching funnel data...');
+      const realFunnelData = await analytics.getFunnelData();
+      console.log('📊 Funnel data loaded:', realFunnelData);
+
+      console.log('📋 Fetching recent applications...');
+      const realApplications = await analytics.getRecentApplications(10);
+      console.log('📝 Recent applications loaded:', realApplications);
+
+      console.log('🎯 Fetching UTM data...');
+      const utmData = await analytics.getUTMStats();
+      console.log('📊 UTM data loaded:', utmData);
 
       setStats(realStats);
       setFunnelData(realFunnelData);
       setRecentApplications(realApplications);
       setUtmStats(utmData);
+
+      console.log('✅ All admin data loaded successfully!');
     } catch (error) {
-      console.error('Error loading analytics data:', error);
+      console.error('❌ Error loading analytics data:', error);
     } finally {
       setLoading(false);
     }
@@ -52,6 +64,7 @@ const AdminPage = () => {
   const handleLogin = () => {
     if (password === 'admin123') {
       setIsAuthenticated(true);
+      console.log('🔑 Admin login successful');
     } else {
       alert('Неверный пароль');
     }
@@ -109,6 +122,9 @@ const AdminPage = () => {
           >
             🔄 Обновить данные
           </button>
+          <div className="mt-2 text-sm text-gray-500">
+            Заявок в базе: {stats.filledForms} | Показано в таблице: {recentApplications.length}
+          </div>
         </div>
 
         {/* Stats Cards */}
@@ -219,7 +235,12 @@ const AdminPage = () => {
                 </TableBody>
               </Table>
             ) : (
-              <p className="text-gray-500">Пока нет заявок</p>
+              <div>
+                <p className="text-gray-500 mb-2">Пока нет заявок</p>
+                <p className="text-xs text-gray-400">
+                  Откройте консоль браузера (F12) для диагностики
+                </p>
+              </div>
             )}
           </CardContent>
         </Card>
