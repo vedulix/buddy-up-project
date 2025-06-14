@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 
 interface FormAnswers {
   grade: string;
-  goals: string[];
+  goals: string;
   subjects: string[];
   level: string;
   examScore: string;
@@ -17,7 +17,7 @@ const STORAGE_KEY = 'questionnaire-progress';
 export const useFormProgress = () => {
   const [answers, setAnswers] = useState<FormAnswers>({
     grade: '',
-    goals: [],
+    goals: '',
     subjects: [],
     level: '',
     examScore: '',
