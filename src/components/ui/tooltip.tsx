@@ -7,11 +7,11 @@ import { cn } from "@/lib/utils"
 const TooltipProvider = React.forwardRef<
   React.ElementRef<typeof TooltipPrimitive.Provider>,
   React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Provider>
->(({ children, ...props }, ref) => {
+>(({ children, ...props }, _ref) => {
   // Add error boundary for tooltip provider
   try {
     return (
-      <TooltipPrimitive.Provider ref={ref} {...props}>
+      <TooltipPrimitive.Provider {...props}>
         {children}
       </TooltipPrimitive.Provider>
     )
