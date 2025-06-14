@@ -1,10 +1,12 @@
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { CheckCircle, Share2 } from 'lucide-react';
+import { CheckCircle, Share2, Bell } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { analytics } from '@/utils/analytics';
 import { useEffect } from 'react';
+import Confetti from '@/components/Confetti';
+import CelebrationAnimation from '@/components/CelebrationAnimation';
 
 const ThanksPage = () => {
   const navigate = useNavigate();
@@ -43,11 +45,23 @@ const ThanksPage = () => {
     window.open(telegramUrl, '_blank', 'noopener,noreferrer');
   };
 
+  const handleChannelSubscribe = () => {
+    analytics.track('channel_subscribe_click');
+    window.open('https://t.me/pioblog', '_blank', 'noopener,noreferrer');
+  };
+
   return (
-    <div className="min-h-screen bg-white py-16">
+    <div className="min-h-screen bg-white py-16 relative">
+      <Confetti />
+      
       <div className="container mx-auto px-6 max-w-2xl">
-        <Card className="p-12 text-center border-2 border-[#FECD02]">
-          <div className="bg-[#FECD02] w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+        <Card className="p-12 text-center border-2 border-[#FECD02] relative overflow-hidden">
+          {/* Background celebration pattern */}
+          <div className="absolute top-0 left-0 w-full h-full opacity-5 bg-gradient-to-br from-[#FECD02] to-transparent"></div>
+          
+          <CelebrationAnimation />
+
+          <div className="bg-[#FECD02] w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
             <CheckCircle className="w-10 h-10 text-black" />
           </div>
 
@@ -60,6 +74,23 @@ const ThanksPage = () => {
               <strong>Сейчас мы собираем заявки. 📝</strong><br/>
               Как только запустим подбор напарников, пришлём ссылку на <strong>@hub_hub_bot</strong>. 🤖
             </p>
+          </div>
+
+          {/* Telegram channel promotion */}
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 mb-8 border border-blue-200">
+            <div className="flex items-center justify-center mb-3">
+              <Bell className="w-5 h-5 text-blue-600 mr-2" />
+              <h3 className="text-lg font-semibold text-blue-800">Следи за обновлениями! 📱</h3>
+            </div>
+            <p className="text-blue-700 mb-4 text-sm">
+              Подпишись на телеграм канал автора, чтобы быть в курсе всех новостей и обновлений сервиса:
+            </p>
+            <Button
+              onClick={handleChannelSubscribe}
+              className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 font-semibold w-full sm:w-auto"
+            >
+              📺 Подписаться на @pioblog
+            </Button>
           </div>
 
           <div className="border-t pt-8">
