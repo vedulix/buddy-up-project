@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -15,6 +14,7 @@ const AdminPage = () => {
 
   const [funnelData, setFunnelData] = useState<Array<{step: string, count: number, dropRate: number}>>([]);
   const [recentApplications, setRecentApplications] = useState<Array<any>>([]);
+  const [utmStats, setUtmStats] = useState<Array<any>>([]);
 
   // Simple auth check
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -35,6 +35,9 @@ const AdminPage = () => {
     
     const realApplications = analytics.getRecentApplications(10);
     setRecentApplications(realApplications);
+
+    const utmData = analytics.getUTMStats();
+    setUtmStats(utmData);
   };
 
   const handleLogin = () => {
@@ -199,6 +202,52 @@ const AdminPage = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* UTM ANALYTICS SECTION */}
+        <div className="mt-10 mb-10">
+          <Card>
+            <CardHeader>
+              <CardTitle>📊 UTM Analytics — по источникам трафика</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {utmStats.length === 0 ? (
+                <p className="text-gray-500">Нет данных по переходам с UTM-метками</p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>UTM Source</TableHead>
+                      <TableHead>UTM Campaign</TableHead>
+                      <TableHead>Клики</TableHead>
+                      <TableHead>Заявки</TableHead>
+                      <TableHead>Конверсия (%)</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {utmStats.map((u, i) => (
+                      <TableRow key={i}>
+                        <TableCell>{u.utm_source}</TableCell>
+                        <TableCell>{u.utm_campaign || <span className="text-gray-400 italic">-</span>}</TableCell>
+                        <TableCell>{u.clicks}</TableCell>
+                        <TableCell>{u.submissions}</TableCell>
+                        <TableCell>
+                          <span className={u.conversion > 10 ? 'text-green-600' : u.conversion > 2 ? 'text-yellow-700' : 'text-gray-800 font-semibold'}>
+                            {u.conversion}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+              <div className="mt-2 text-xs text-gray-500">
+                <span className="italic">
+                  UTM-параметры (utm_source/utm_campaign) — переходы и заявки для отслеживания маркетинговых кампаний (например, постов в Telegram).
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

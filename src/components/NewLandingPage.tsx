@@ -1,17 +1,21 @@
-
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Clock, Users, TrendingUp, Timer, HandHeart, BarChart3, BookOpen, Target, Star, Zap, Calendar } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { analytics } from '@/utils/analytics';
+import { parseUTMFromURL, UTMData } from '@/utils/utm';
 
 const NewLandingPage = () => {
   const navigate = useNavigate();
   const [applicationsCount, setApplicationsCount] = useState(0);
 
   useEffect(() => {
-    // Track page view
+    // Track page view and save UTM on every landing visit
+    const utm = parseUTMFromURL();
+    if (Object.values(utm).some(Boolean)) {
+      analytics.updateUTM(utm);
+    }
     analytics.track('page_view', { page: 'landing' });
     
     // Get real application count

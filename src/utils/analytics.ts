@@ -1,3 +1,4 @@
+import { parseUTMFromURL, UTMData } from './utm';
 
 interface AnalyticsEvent {
   event: string;
@@ -5,6 +6,7 @@ interface AnalyticsEvent {
   sessionId: string;
   route?: string;
   data?: any;
+  utm?: UTMData;
 }
 
 interface ApplicationData {
@@ -24,14 +26,32 @@ class AnalyticsService {
   private sessionId: string;
   private events: AnalyticsEvent[] = [];
   private applications: ApplicationData[] = [];
+  private utm: UTMData = {};
 
   constructor() {
     this.sessionId = this.generateSessionId();
     this.loadFromLocalStorage();
+    this.loadOrExtractUTM();
   }
 
   private generateSessionId(): string {
     return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  private loadOrExtractUTM() {
+    // Try to read from localStorage first (persist UTM for session)
+    const savedUTM = localStorage.getItem('studybuddy_utm');
+    if (savedUTM) {
+      this.utm = JSON.parse(savedUTM);
+    } else {
+      // Parse from current URL
+      const utmFromUrl = parseUTMFromURL();
+      // Save only if at least one UTM is present
+      if (Object.values(utmFromUrl).some(Boolean)) {
+        this.utm = utmFromUrl;
+        localStorage.setItem('studybuddy_utm', JSON.stringify(utmFromUrl));
+      }
+    }
   }
 
   private loadFromLocalStorage() {
@@ -60,13 +80,21 @@ class AnalyticsService {
     }
   }
 
-  track(event: string, data?: any) {
+  updateUTM(newUtm: UTMData) {
+    // Allow updating UTM if needed (used from landing)
+    this.utm = newUtm;
+    localStorage.setItem('studybuddy_utm', JSON.stringify(newUtm));
+  }
+
+  track(event: string, data?: any, utmOverride?: UTMData) {
+    const eventUTM = utmOverride || this.utm;
     const analyticsEvent: AnalyticsEvent = {
       event,
       timestamp: Date.now(),
       sessionId: this.sessionId,
       route: window.location.pathname,
-      data
+      data,
+      utm: eventUTM
     };
 
     this.events.push(analyticsEvent);
@@ -134,6 +162,60 @@ class AnalyticsService {
         level: app.level || app.examScore,
         date: new Date(app.timestamp).toLocaleString('ru-RU')
       }));
+  }
+
+  getUTMStats() {
+    // Returns stats grouped by utm_source + utm_campaign
+    const events = this.events.filter(event => event.utm && event.event === 'page_view');
+    const submits = this.events.filter(event => event.utm && event.event === 'form_submit');
+    const statsMap = new Map<string, {
+      utm_source: string, utm_campaign: string, utm_medium?: string, utm_term?: string, utm_content?: string,
+      clicks: number, submissions: number
+    }>();
+
+    for (const event of events) {
+      const source = event.utm?.utm_source || 'direct';
+      const campaign = event.utm?.utm_campaign || '';
+      const key = `${source}::${campaign}`;
+      if (!statsMap.has(key)) {
+        statsMap.set(key, {
+          utm_source: source,
+          utm_campaign: campaign,
+          utm_medium: event.utm?.utm_medium,
+          utm_term: event.utm?.utm_term,
+          utm_content: event.utm?.utm_content,
+          clicks: 0,
+          submissions: 0
+        });
+      }
+      statsMap.get(key)!.clicks += 1;
+    }
+
+    for (const submit of submits) {
+      const source = submit.utm?.utm_source || 'direct';
+      const campaign = submit.utm?.utm_campaign || '';
+      const key = `${source}::${campaign}`;
+      if (!statsMap.has(key)) {
+        // If someone managed to submit not from a click, create entry
+        statsMap.set(key, {
+          utm_source: source,
+          utm_campaign: campaign,
+          utm_medium: submit.utm?.utm_medium,
+          utm_term: submit.utm?.utm_term,
+          utm_content: submit.utm?.utm_content,
+          clicks: 0,
+          submissions: 0
+        });
+      }
+      statsMap.get(key)!.submissions += 1;
+    }
+
+    return Array.from(statsMap.values())
+      .map(stat => ({
+        ...stat,
+        conversion: stat.clicks === 0 ? 0 : Math.round((stat.submissions / stat.clicks) * 1000) / 10 // %
+      }))
+      .sort((a, b) => b.clicks - a.clicks);
   }
 }
 
