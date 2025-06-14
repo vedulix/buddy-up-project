@@ -1,4 +1,5 @@
 
+
 @keyframes celebration-bounce {
   0%, 20%, 50%, 80%, 100% {
     transform: translateY(0);
@@ -30,3 +31,4 @@
 .celebrate-bounce {
   animation: celebration-bounce 2s ease-in-out infinite;
 }
+
