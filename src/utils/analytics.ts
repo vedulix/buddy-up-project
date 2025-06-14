@@ -1,4 +1,3 @@
-
 import { parseUTMFromURL, UTMData } from './utm';
 import { supabase } from '@/integrations/supabase/client';
 

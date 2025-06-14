@@ -104,7 +104,7 @@ const ExtendedQuestionnaire = () => {
     }
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     // Track step completion
     analytics.track('form_step_complete', { 
       step: currentStep + 1,
@@ -115,17 +115,34 @@ const ExtendedQuestionnaire = () => {
       setCurrentStep(currentStep + 1);
     } else {
       // Submit form with real analytics
-      console.log('Form submitted:', answers);
+      console.log('🚀 Form completed, preparing to submit:', answers);
       
       // Clean up emoji from answers for storage
       const cleanAnswers = {
-        ...answers,
+        grade: answers.grade,
         goals: answers.goals.map(goal => goal.replace(/\s*[📚📝🏆💡]\s*$/, '')),
-        subjects: answers.subjects.map(subject => subject.replace(/\s*[📝🔢💻⚡🧪🧬📜🏛️❓]\s*$/, ''))
+        subjects: answers.subjects.map(subject => subject.replace(/\s*[📝🔢💻⚡🧪🧬📜🏛️❓]\s*$/, '')),
+        level: answers.level || `Самооценка: ${answers.selfAssessment[0]}/10`,
+        exam_score: answers.examScore || undefined,
+        email: answers.email,
+        telegram: answers.telegram
       };
       
-      analytics.submitApplication(cleanAnswers);
-      navigate('/thanks');
+      console.log('📋 Cleaned answers ready for submission:', cleanAnswers);
+      
+      try {
+        const result = await analytics.submitApplication(cleanAnswers);
+        if (result) {
+          console.log('✅ Application submission successful, navigating to thanks page');
+          navigate('/thanks');
+        } else {
+          console.error('❌ Application submission failed');
+          alert('Произошла ошибка при отправке заявки. Попробуйте еще раз.');
+        }
+      } catch (error) {
+        console.error('❌ Unexpected error during submission:', error);
+        alert('Произошла ошибка при отправке заявки. Попробуйте еще раз.');
+      }
     }
   };
 
