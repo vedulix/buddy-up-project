@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -9,70 +10,63 @@ import { Slider } from '@/components/ui/slider';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { analytics } from '@/utils/analytics';
-import { useFormProgress } from '@/hooks/useFormProgress';
-import ProgressIndicator from '@/components/ProgressIndicator';
-import ValidationMessage, { validateEmail, validateTelegram } from '@/components/FormValidation';
 
 const ExtendedQuestionnaire = () => {
   const navigate = useNavigate();
-  const { answers, setAnswers, currentStep, setCurrentStep, clearProgress } = useFormProgress();
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [currentStep, setCurrentStep] = useState(0);
+  const [answers, setAnswers] = useState({
+    grade: '',
+    goals: [] as string[],
+    subjects: [] as string[],
+    level: '',
+    examScore: '',
+    selfAssessment: [5],
+    email: '',
+    telegram: ''
+  });
 
-  useEffect(() => {
-    // Track form start only once
-    if (currentStep === 0 && !answers.grade) {
-      analytics.track('form_start');
-    }
-  }, []);
+  useState(() => {
+    // Track form start
+    analytics.track('form_start');
+  });
 
   const steps = [
     {
       id: 'grade',
-      title: '🎓 Кто ты?',
-      shortTitle: 'Статус',
+      title: '🎓 В каком ты классе?',
       type: 'radio',
-      options: [
-        'Школьник 📚',
-        'Выпускник 🎯', 
-        'Студент 📖'
-      ]
+      options: ['9', '10', '11']
     },
     {
       id: 'goals',
-      title: '🎯 Что хочешь достичь?',
-      shortTitle: 'Цель',
-      type: 'radio',
-      options: [
-        'Подготовиться к экзаменам 📝',
-        'Изучить новые навыки 🚀',
-        'Сделать проект 💡'
-      ]
+      title: '🎯 Какие у тебя цели?',
+      type: 'checkbox',
+      options: ['ЕГЭ 📚', 'ОГЭ 📝', 'Олимпиады 🏆', 'Проекты 💡']
     },
     {
       id: 'subjects',
-      title: '📖 По какому предмету ищешь напарника?',
-      shortTitle: 'Предмет',
+      title: '📖 Какие предметы хочешь ботать вместе с напарником?',
       type: 'checkbox',
       options: [
-        'Математика 🔢',
+        'Русский язык 📝',
+        'Математика профильная 🔢',
         'Информатика 💻',
         'Физика ⚡',
-        'Русский язык 📝',
-        'Английский язык 🌍',
+        'Химия 🧪',
+        'Биология 🧬',
+        'История 📜',
         'Обществознание 🏛️',
-        'Другой предмет ❓'
+        'Другое ❓'
       ]
     },
     {
       id: 'level',
-      title: '📊 Какой у тебя уровень?',
-      shortTitle: 'Уровень',
-      type: 'slider'
+      title: '📊 Какой у тебя текущий уровень?',
+      type: 'conditional'
     },
     {
       id: 'contacts',
       title: '📱 Как с тобой связаться?',
-      shortTitle: 'Контакты',
       type: 'contacts'
     }
   ];
@@ -82,14 +76,6 @@ const ExtendedQuestionnaire = () => {
       ...prev,
       [stepId]: value
     }));
-
-    // Clear validation errors when user starts typing
-    if (validationErrors[stepId]) {
-      setValidationErrors(prev => ({
-        ...prev,
-        [stepId]: ''
-      }));
-    }
   };
 
   const handleCheckboxToggle = (stepId: string, option: string) => {
@@ -101,72 +87,26 @@ const ExtendedQuestionnaire = () => {
     }));
   };
 
-  // Auto-advance for radio buttons (except subjects which are checkboxes)
-  const handleRadioChange = (stepId: string, value: string) => {
-    handleAnswerChange(stepId, value);
-    
-    // Auto-advance after short delay for better UX
-    setTimeout(() => {
-      if (currentStep < steps.length - 1) {
-        handleNext();
-      }
-    }, 500);
-  };
-
-  // Validation
-  const validateCurrentStep = () => {
-    const current = steps[currentStep];
-    const errors: Record<string, string> = {};
-
-    switch (current.id) {
-      case 'grade':
-        if (!answers.grade) errors.grade = 'Выберите ваш статус';
-        break;
-      case 'goals':
-        if (!answers.goals) {
-          errors.goals = 'Выберите вашу цель';
-        }
-        break;
-      case 'subjects':
-        if (!answers.subjects || answers.subjects.length === 0) errors.subjects = 'Выберите хотя бы один предмет';
-        break;
-      case 'level':
-        // Level is always valid with slider
-        break;
-      case 'contacts':
-        const emailError = validateEmail(answers.email);
-        const telegramError = validateTelegram(answers.telegram);
-        if (emailError) errors.email = emailError;
-        if (telegramError) errors.telegram = telegramError;
-        break;
-    }
-
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
   const canProceed = () => {
     const current = steps[currentStep];
     switch (current.id) {
       case 'grade':
-        return !!answers.grade;
+        return answers.grade !== '';
       case 'goals':
-        return !!answers.goals;
+        return answers.goals.length > 0;
       case 'subjects':
-        return answers.subjects && answers.subjects.length > 0;
+        return answers.subjects.length > 0;
       case 'level':
-        return true; // Always valid with slider
+        return answers.level !== '' || answers.examScore !== '' || answers.selfAssessment[0] >= 1;
       case 'contacts':
-        return answers.email !== '' && answers.telegram !== '' && 
-               !validateEmail(answers.email) && !validateTelegram(answers.telegram);
+        return answers.email !== '' && answers.telegram !== '';
       default:
         return true;
     }
   };
 
   const handleNext = () => {
-    if (!validateCurrentStep()) return;
-
+    // Track step completion
     analytics.track('form_step_complete', { 
       step: currentStep + 1,
       stepId: steps[currentStep].id 
@@ -175,16 +115,17 @@ const ExtendedQuestionnaire = () => {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
+      // Submit form with real analytics
       console.log('Form submitted:', answers);
       
+      // Clean up emoji from answers for storage
       const cleanAnswers = {
         ...answers,
-        goals: answers.goals.replace(/\s*[📝🚀💡🏆]\s*$/, ''),
-        subjects: answers.subjects.map(subject => subject.replace(/\s*[🔢💻⚡📝🌍🏛️❓]\s*$/, ''))
+        goals: answers.goals.map(goal => goal.replace(/\s*[📚📝🏆💡]\s*$/, '')),
+        subjects: answers.subjects.map(subject => subject.replace(/\s*[📝🔢💻⚡🧪🧬📜🏛️❓]\s*$/, ''))
       };
       
       analytics.submitApplication(cleanAnswers);
-      clearProgress();
       navigate('/thanks');
     }
   };
@@ -195,68 +136,98 @@ const ExtendedQuestionnaire = () => {
     }
   };
 
-  // Handle keyboard navigation
-  useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      if (e.key === 'Enter' && canProceed()) {
-        handleNext();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [currentStep, canProceed]);
-
   const renderStep = () => {
     const step = steps[currentStep];
 
     switch (step.type) {
       case 'radio':
         return (
-          <div className="space-y-4">
-            <RadioGroup 
-              value={answers[step.id as keyof typeof answers] as string} 
-              onValueChange={(value) => handleRadioChange(step.id, value)}
-              className="space-y-4"
-            >
-              {step.options?.map((option) => (
-                <div key={option} className="flex items-center space-x-4 p-4 rounded-xl hover:bg-gray-50 transition-colors border-2 border-gray-100 hover:border-[#FECD02] cursor-pointer">
-                  <RadioGroupItem value={option} id={option} className="text-[#FECD02]" />
-                  <Label htmlFor={option} className="text-lg cursor-pointer flex-1 font-medium">{option}</Label>
-                </div>
-              ))}
-            </RadioGroup>
-            {validationErrors[step.id] && <ValidationMessage message={validationErrors[step.id]} />}
-          </div>
+          <RadioGroup 
+            value={answers[step.id as keyof typeof answers] as string} 
+            onValueChange={(value) => handleAnswerChange(step.id, value)}
+            className="space-y-4"
+          >
+            {step.options?.map((option) => (
+              <div key={option} className="flex items-center space-x-3 p-4 rounded-lg hover:bg-gray-50 transition-colors border">
+                <RadioGroupItem value={option} id={option} />
+                <Label htmlFor={option} className="text-lg cursor-pointer flex-1">{option}</Label>
+              </div>
+            ))}
+          </RadioGroup>
         );
 
       case 'checkbox':
         return (
           <div className="space-y-4">
-            <p className="text-gray-600 mb-4">✨ Можешь выбрать несколько предметов</p>
             {step.options?.map((option) => (
-              <div key={option} className="flex items-center space-x-4 p-4 rounded-xl hover:bg-gray-50 transition-colors border-2 border-gray-100 hover:border-[#FECD02]">
+              <div key={option} className="flex items-center space-x-3 p-4 rounded-lg hover:bg-gray-50 transition-colors border">
                 <Checkbox
                   id={option}
-                  checked={(answers[step.id as keyof typeof answers] as string[])?.includes(option) || false}
+                  checked={(answers[step.id as keyof typeof answers] as string[]).includes(option)}
                   onCheckedChange={() => handleCheckboxToggle(step.id, option)}
-                  className="border-[#FECD02] text-[#FECD02]"
                 />
-                <Label htmlFor={option} className="text-lg cursor-pointer flex-1 font-medium">{option}</Label>
+                <Label htmlFor={option} className="text-lg cursor-pointer flex-1">{option}</Label>
               </div>
             ))}
-            {validationErrors[step.id] && <ValidationMessage message={validationErrors[step.id]} />}
           </div>
         );
 
-      case 'slider':
-        return (
-          <div className="space-y-8">
-            <div className="text-center space-y-2">
-              <p className="text-lg text-gray-600">✨ Оцени свой текущий уровень:</p>
-              <p className="text-sm text-gray-500">От новичка до эксперта</p>
+      case 'conditional':
+        if (answers.goals.some(goal => goal.includes('ЕГЭ') || goal.includes('ОГЭ'))) {
+          return (
+            <div className="space-y-6">
+              <div>
+                <Label htmlFor="examScore" className="text-lg block mb-4">📊 Баллы последнего пробника (если сдавал):</Label>
+                <Input
+                  id="examScore"
+                  type="number"
+                  placeholder="Введи количество баллов или оставь пустым"
+                  value={answers.examScore}
+                  onChange={(e) => handleAnswerChange('examScore', e.target.value)}
+                  className="text-lg p-4 mb-6"
+                />
+              </div>
+              
+              <div className="border-t pt-6">
+                <Label className="text-lg block mb-4">🎯 Если не сдавал пробник, оцени свой уровень по шкале от 1 до 10:</Label>
+                <div className="px-4">
+                  <Slider
+                    value={answers.selfAssessment}
+                    onValueChange={(value) => handleAnswerChange('selfAssessment', value)}
+                    max={10}
+                    min={1}
+                    step={1}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-sm text-gray-500 mt-2">
+                    <span>1 (начинаю с нуля)</span>
+                    <span className="font-semibold text-lg text-[#FECD02]">{answers.selfAssessment[0]}/10</span>
+                    <span>10 (готов на 100%)</span>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="px-6">
+          );
+        } else if (answers.goals.some(goal => goal.includes('Олимпиады'))) {
+          return (
+            <RadioGroup 
+              value={answers.level} 
+              onValueChange={(value) => handleAnswerChange('level', value)}
+              className="space-y-4"
+            >
+              {['🏫 Школьный уровень', '🏘️ Муниципальный уровень', '🏛️ Региональный уровень', '🎯 Заключительный тур', '🏆 Призёр/победитель'].map((level) => (
+                <div key={level} className="flex items-center space-x-3 p-4 rounded-lg hover:bg-gray-50 transition-colors border">
+                  <RadioGroupItem value={level} id={level} />
+                  <Label htmlFor={level} className="text-lg cursor-pointer flex-1">{level}</Label>
+                </div>
+              ))}
+            </RadioGroup>
+          );
+        }
+        return (
+          <div className="space-y-6">
+            <p className="text-lg text-gray-600">✨ Отлично! Оцени свой текущий уровень по шкале от 1 до 10:</p>
+            <div className="px-4">
               <Slider
                 value={answers.selfAssessment}
                 onValueChange={(value) => handleAnswerChange('selfAssessment', value)}
@@ -265,10 +236,10 @@ const ExtendedQuestionnaire = () => {
                 step={1}
                 className="w-full"
               />
-              <div className="flex justify-between text-sm text-gray-500 mt-4">
-                <span>1 (новичок)</span>
-                <span className="font-bold text-2xl text-[#FECD02]">{answers.selfAssessment[0]}/10</span>
-                <span>10 (эксперт)</span>
+              <div className="flex justify-between text-sm text-gray-500 mt-2">
+                <span>1 (начинаю с нуля)</span>
+                <span className="font-semibold text-lg text-[#FECD02]">{answers.selfAssessment[0]}/10</span>
+                <span>10 (эксперт в области)</span>
               </div>
             </div>
           </div>
@@ -277,29 +248,26 @@ const ExtendedQuestionnaire = () => {
       case 'contacts':
         return (
           <div className="space-y-6">
-            <p className="text-gray-600 text-center">🤝 Почти готово! Как с тобой связаться?</p>
             <div>
-              <Label htmlFor="email" className="text-lg mb-3 block font-medium">📧 Email:</Label>
+              <Label htmlFor="email" className="text-lg mb-2 block">📧 Email:</Label>
               <Input
                 id="email"
                 type="email"
                 placeholder="your@email.com"
                 value={answers.email}
                 onChange={(e) => handleAnswerChange('email', e.target.value)}
-                className="text-lg p-4 border-2 border-gray-200 focus:border-[#FECD02] rounded-xl"
+                className="text-lg p-4"
               />
-              {validationErrors.email && <ValidationMessage message={validationErrors.email} />}
             </div>
             <div>
-              <Label htmlFor="telegram" className="text-lg mb-3 block font-medium">💬 Telegram:</Label>
+              <Label htmlFor="telegram" className="text-lg mb-2 block">💬 Telegram username:</Label>
               <Input
                 id="telegram"
                 placeholder="@username"
                 value={answers.telegram}
                 onChange={(e) => handleAnswerChange('telegram', e.target.value)}
-                className="text-lg p-4 border-2 border-gray-200 focus:border-[#FECD02] rounded-xl"
+                className="text-lg p-4"
               />
-              {validationErrors.telegram && <ValidationMessage message={validationErrors.telegram} />}
             </div>
           </div>
         );
@@ -310,48 +278,49 @@ const ExtendedQuestionnaire = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white to-gray-50 py-8">
+    <div className="min-h-screen bg-white py-8">
       <div className="container mx-auto px-6 max-w-2xl">
-        <ProgressIndicator 
-          currentStep={currentStep}
-          totalSteps={steps.length}
-          stepTitles={steps.map(step => step.shortTitle)}
-        />
+        {/* Progress bar */}
+        <div className="mb-8">
+          <div className="flex justify-between text-sm text-gray-500 mb-2">
+            <span>Шаг {currentStep + 1} из {steps.length}</span>
+            <span>{Math.round(((currentStep + 1) / steps.length) * 100)}% ✨</span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div 
+              className="bg-[#FECD02] h-2 rounded-full transition-all duration-500"
+              style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
+            ></div>
+          </div>
+        </div>
 
-        <Card className="p-8 border-2 border-gray-100 shadow-lg rounded-2xl bg-white">
-          <h2 className="text-3xl md:text-4xl font-bold mb-8 text-black text-center">
+        <Card className="p-8 border-2 border-gray-100">
+          <h2 className="text-2xl md:text-3xl font-bold mb-8 text-black">
             {steps[currentStep].title}
           </h2>
 
           {renderStep()}
 
-          <div className="flex justify-between mt-10">
+          <div className="flex justify-between mt-8">
             <Button
               onClick={handleBack}
               disabled={currentStep === 0}
               variant="outline"
-              className="px-8 py-4 border-2 text-lg rounded-xl"
+              className="px-6 py-3 border-2"
             >
-              <ChevronLeft className="w-5 h-5 mr-2" />
-              Назад
+              <ChevronLeft className="w-4 h-4 mr-2" />
+              ⬅️ Назад
             </Button>
 
             <Button
               onClick={handleNext}
               disabled={!canProceed()}
-              className="bg-[#FECD02] hover:bg-[#FECD02]/90 text-black px-8 py-4 font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all"
+              className="bg-[#FECD02] hover:bg-[#FECD02]/90 text-black px-6 py-3 font-semibold"
             >
-              {currentStep === steps.length - 1 ? '🚀 Найти напарника!' : 'Далее'}
-              <ChevronRight className="w-5 h-5 ml-2" />
+              {currentStep === steps.length - 1 ? '🚀 Отправить заявку' : '➡️ Далее'}
+              <ChevronRight className="w-4 h-4 ml-2" />
             </Button>
           </div>
-
-          {/* Progress hint */}
-          {canProceed() && currentStep < steps.length - 1 && (
-            <p className="text-center text-sm text-gray-500 mt-6">
-              💡 Нажми Enter или кнопку "Далее"
-            </p>
-          )}
         </Card>
       </div>
     </div>

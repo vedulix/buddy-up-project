@@ -1,106 +1,140 @@
 
-import posthog from 'posthog-js';
-
-interface Analytics {
-  init: (config: { posthogKey: string; apiHost: string; debug: boolean }) => void;
-  identify: (userId: string, properties?: any) => void;
-  track: (eventName: string, properties?: any) => void;
-  submitApplication: (data: ApplicationData) => void;
-  getStats: () => { totalVisits: number; uniqueVisitors: number; filledForms: number; conversionRate: number };
-  getFunnelData: () => Array<{step: string, count: number, dropRate: number}>;
-  getRecentApplications: (limit: number) => Array<any>;
+interface AnalyticsEvent {
+  event: string;
+  timestamp: number;
+  sessionId: string;
+  route?: string;
+  data?: any;
 }
 
 interface ApplicationData {
+  id: string;
   grade: string;
-  goals: string;
+  goals: string[];
   subjects: string[];
   level: string;
   examScore: string;
-  selfAssessment: number[];
   email: string;
   telegram: string;
+  timestamp: number;
+  sessionId: string;
 }
 
-const analytics: Analytics = {
-  init: ({ posthogKey, apiHost, debug }) => {
-    if (posthogKey) {
-      posthog.init(posthogKey, {
-        api_host: apiHost,
-        debug,
-        capture_pageview: false,
-      });
-    } else {
-      console.warn('PostHog key is not provided. Analytics will be disabled.');
-    }
-  },
+class AnalyticsService {
+  private sessionId: string;
+  private events: AnalyticsEvent[] = [];
+  private applications: ApplicationData[] = [];
 
-  identify: (userId, properties) => {
-    if (typeof posthog !== 'undefined' && posthog.isFeatureEnabled && posthog.isFeatureEnabled('analytics')) {
-      posthog.identify(userId, properties);
-    } else {
-      console.log(`[Analytics] Identify: User ID - ${userId}`, properties);
-    }
-  },
+  constructor() {
+    this.sessionId = this.generateSessionId();
+    this.loadFromLocalStorage();
+  }
 
-  track: (eventName, properties) => {
-    if (typeof posthog !== 'undefined' && posthog.isFeatureEnabled && posthog.isFeatureEnabled('analytics')) {
-      posthog.capture(eventName, properties);
-    } else {
-      console.log(`[Analytics] Track: ${eventName}`, properties);
-    }
-  },
+  private generateSessionId(): string {
+    return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
 
-  submitApplication: (data) => {
-    if (typeof posthog !== 'undefined' && posthog.isFeatureEnabled && posthog.isFeatureEnabled('analytics')) {
-      posthog.capture('submit_application', data);
-    } else {
-      console.log('[Analytics] Submit Application:', data);
+  private loadFromLocalStorage() {
+    try {
+      const storedEvents = localStorage.getItem('studybuddy_events');
+      const storedApplications = localStorage.getItem('studybuddy_applications');
+      
+      if (storedEvents) {
+        this.events = JSON.parse(storedEvents);
+      }
+      
+      if (storedApplications) {
+        this.applications = JSON.parse(storedApplications);
+      }
+    } catch (error) {
+      console.error('Error loading analytics data:', error);
     }
-    
-    // Increment real counter in localStorage
-    const currentCount = parseInt(localStorage.getItem('applications_count') || '0');
-    localStorage.setItem('applications_count', (currentCount + 1).toString());
-  },
+  }
 
-  getStats: () => {
-    // Get real application count from localStorage
-    const realApplicationsCount = parseInt(localStorage.getItem('applications_count') || '0');
-    
-    return {
-      totalVisits: Math.floor(Math.random() * 1000) + 100,
-      uniqueVisitors: Math.floor(Math.random() * 500) + 50,
-      filledForms: realApplicationsCount,
-      conversionRate: Math.floor(Math.random() * 20) + 5
+  private saveToLocalStorage() {
+    try {
+      localStorage.setItem('studybuddy_events', JSON.stringify(this.events));
+      localStorage.setItem('studybuddy_applications', JSON.stringify(this.applications));
+    } catch (error) {
+      console.error('Error saving analytics data:', error);
+    }
+  }
+
+  track(event: string, data?: any) {
+    const analyticsEvent: AnalyticsEvent = {
+      event,
+      timestamp: Date.now(),
+      sessionId: this.sessionId,
+      route: window.location.pathname,
+      data
     };
-  },
 
-  getFunnelData: () => {
-    // Mock funnel data - in real implementation this would fetch from PostHog API
-    return [
-      { step: 'Посещение сайта', count: 1000, dropRate: 0 },
-      { step: 'Начал заполнение формы', count: 300, dropRate: 70 },
-      { step: 'Заполнил первый шаг', count: 200, dropRate: 33 },
-      { step: 'Заполнил второй шаг', count: 150, dropRate: 25 },
-      { step: 'Отправил заявку', count: 100, dropRate: 33 }
+    this.events.push(analyticsEvent);
+    this.saveToLocalStorage();
+    
+    console.log('Analytics event:', analyticsEvent);
+  }
+
+  submitApplication(applicationData: Omit<ApplicationData, 'id' | 'timestamp' | 'sessionId'>) {
+    const application: ApplicationData = {
+      ...applicationData,
+      id: `app_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      timestamp: Date.now(),
+      sessionId: this.sessionId
+    };
+
+    this.applications.push(application);
+    this.saveToLocalStorage();
+    this.track('form_submit', { applicationId: application.id });
+    
+    return application;
+  }
+
+  getStats() {
+    const uniqueSessions = new Set(this.events.map(e => e.sessionId)).size;
+    const totalVisits = this.events.filter(e => e.event === 'page_view').length;
+    const ctaClicks = this.events.filter(e => e.event === 'cta_click').length;
+    const formStarts = this.events.filter(e => e.event === 'form_start').length;
+    const formSubmits = this.events.filter(e => e.event === 'form_submit').length;
+    
+    const conversionRate = uniqueSessions > 0 ? (formSubmits / uniqueSessions * 100) : 0;
+
+    return {
+      totalVisits,
+      uniqueVisitors: uniqueSessions,
+      ctaClicks,
+      formStarts,
+      filledForms: formSubmits,
+      conversionRate: Math.round(conversionRate * 10) / 10,
+      applications: this.applications
+    };
+  }
+
+  getFunnelData() {
+    const stats = this.getStats();
+    const steps = [
+      { step: 'Landing View', count: stats.uniqueVisitors, dropRate: 0 },
+      { step: 'CTA Click', count: stats.ctaClicks, dropRate: stats.uniqueVisitors > 0 ? Math.round((1 - stats.ctaClicks / stats.uniqueVisitors) * 100) : 0 },
+      { step: 'Form Start', count: stats.formStarts, dropRate: stats.ctaClicks > 0 ? Math.round((1 - stats.formStarts / stats.ctaClicks) * 100) : 0 },
+      { step: 'Form Submit', count: stats.filledForms, dropRate: stats.formStarts > 0 ? Math.round((1 - stats.filledForms / stats.formStarts) * 100) : 0 }
     ];
-  },
 
-  getRecentApplications: (limit) => {
-    // Mock recent applications - in real implementation this would fetch from your backend
-    const mockApplications = [];
-    for (let i = 0; i < limit; i++) {
-      mockApplications.push({
-        id: i + 1,
-        grade: ['9 класс', '10 класс', '11 класс'][Math.floor(Math.random() * 3)],
-        goals: ['ЕГЭ', 'ОГЭ', 'Олимпиады'][Math.floor(Math.random() * 3)],
-        subjects: ['Математика', 'Физика', 'Русский язык'][Math.floor(Math.random() * 3)],
-        level: ['Базовый', 'Профильный'][Math.floor(Math.random() * 2)],
-        date: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toLocaleDateString('ru-RU')
-      });
-    }
-    return mockApplications;
-  },
-};
+    return steps;
+  }
 
-export { analytics };
+  getRecentApplications(limit: number = 10) {
+    return this.applications
+      .sort((a, b) => b.timestamp - a.timestamp)
+      .slice(0, limit)
+      .map(app => ({
+        id: app.id,
+        grade: app.grade,
+        goals: app.goals.join(', '),
+        subjects: app.subjects.join(', '),
+        level: app.level || app.examScore,
+        date: new Date(app.timestamp).toLocaleString('ru-RU')
+      }));
+  }
+}
+
+export const analytics = new AnalyticsService();
